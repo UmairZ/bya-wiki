@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { KeyRound, LogOut, Users } from "lucide-react";
+import { FolderTree, KeyRound, LogOut, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -124,10 +124,16 @@ export function ProfileMenu({
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           {isOwner && (
-            <DropdownMenuItem render={<Link href="/team" />}>
-              <Users className="size-4" aria-hidden />
-              Team
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem render={<Link href="/team" />}>
+                <Users className="size-4" aria-hidden />
+                Team
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/admin/categories" />}>
+                <FolderTree className="size-4" aria-hidden />
+                Categories
+              </DropdownMenuItem>
+            </>
           )}
           <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
             <KeyRound className="size-4" aria-hidden />
