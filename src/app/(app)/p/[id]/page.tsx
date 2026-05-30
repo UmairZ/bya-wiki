@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PenLine } from "lucide-react";
+import { generateHTML } from "@tiptap/html";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { CategoryIcon } from "@/components/category-icon";
+import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format-date";
+import { buildBaseExtensions } from "@/lib/tiptap/extensions";
+import type { TiptapDoc } from "@/lib/supabase/types";
 
-type Props = {
-  params: Promise<{ id: string }>;
-};
+type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
@@ -20,14 +23,27 @@ export async function generateMetadata({ params }: Props) {
   return { title: data?.title ?? "Page" };
 }
 
+function renderDoc(doc: TiptapDoc): string {
+  if (!doc?.content || doc.content.length === 0) return "";
+  try {
+    return generateHTML(doc, buildBaseExtensions());
+  } catch (err) {
+    console.error("Tiptap render failed", err);
+    return "";
+  }
+}
+
 export default async function PageView({ params }: Props) {
   const { id } = await params;
-  const supabase = await createSupabaseServerClient();
+  const [current, supabase] = await Promise.all([
+    getCurrentUser(),
+    createSupabaseServerClient(),
+  ]);
 
   const { data: page, error } = await supabase
     .from("pages")
     .select(
-      "id, title, slug, excerpt, status, pinned, updated_at, category_id, created_by, updated_by, deleted_at",
+      "id, title, slug, content, excerpt, status, pinned, updated_at, category_id, deleted_at",
     )
     .eq("id", id)
     .single();
@@ -38,6 +54,9 @@ export default async function PageView({ params }: Props) {
     .select("id, name, slug, icon")
     .eq("id", page.category_id)
     .single();
+
+  const html = renderDoc(page.content);
+  const isEmpty = html.trim() === "" || html === "<p></p>";
 
   return (
     <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
@@ -61,46 +80,62 @@ export default async function PageView({ params }: Props) {
       </nav>
 
       <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {category && (
-            <Link
-              href={`/browse/${category.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-muted"
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {category && (
+              <Link
+                href={`/browse/${category.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-muted"
+              >
+                <CategoryIcon name={category.icon} className="size-3.5" />
+                <span>{category.name}</span>
+              </Link>
+            )}
+            {page.status === "draft" && (
+              <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide">
+                Draft
+              </span>
+            )}
+            {page.pinned && (
+              <span className="rounded-full bg-brand-tint px-2 py-0.5 uppercase tracking-wide text-brand-tint-foreground">
+                Pinned
+              </span>
+            )}
+            <span>· updated {formatRelative(page.updated_at)}</span>
+          </div>
+          {current && (
+            <Button
+              render={<Link href={`/p/${page.id}/edit`} />}
+              variant="outline"
+              size="sm"
             >
-              <CategoryIcon name={category.icon} className="size-3.5" />
-              <span>{category.name}</span>
-            </Link>
+              <PenLine className="size-4" aria-hidden />
+              Edit
+            </Button>
           )}
-          {page.status === "draft" && (
-            <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide">
-              Draft
-            </span>
-          )}
-          {page.pinned && (
-            <span className="rounded-full bg-brand-tint px-2 py-0.5 uppercase tracking-wide text-brand-tint-foreground">
-              Pinned
-            </span>
-          )}
-          <span>· updated {formatRelative(page.updated_at)}</span>
         </div>
 
         <h1 className="text-3xl font-semibold tracking-tight">{page.title}</h1>
-        {page.excerpt && (
-          <p className="text-base text-muted-foreground">{page.excerpt}</p>
-        )}
       </header>
 
-      <section className="rounded-lg border border-dashed bg-card/50 p-6 text-center">
-        <span className="inline-flex size-12 items-center justify-center rounded-full bg-brand-tint text-brand-tint-foreground">
-          <PenLine className="size-6" aria-hidden />
-        </span>
-        <p className="mt-3 font-medium">Editor lands in Phase 2b</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tiptap with slash commands, autosave, drafts and the custom layout
-          blocks (tabs, collapsibles, columns, callouts, steps) come next. The
-          page record exists already — only the writing surface is pending.
-        </p>
-      </section>
+      {isEmpty ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card/50 px-6 py-16 text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-brand-tint text-brand-tint-foreground">
+            <PenLine className="size-6" aria-hidden />
+          </span>
+          <p className="font-medium">This page is empty</p>
+          <p className="text-sm text-muted-foreground">
+            Click <em>Edit</em> to start writing.
+          </p>
+        </div>
+      ) : (
+        <div
+          className="prose prose-neutral max-w-none dark:prose-invert"
+          // generateHTML output is from a strict ProseMirror schema — Tiptap
+          // round-trips JSON through ProseMirror, so the output is safe.
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      )}
     </article>
   );
 }

@@ -69,10 +69,19 @@ export type CategoryUpdate = {
 // pages
 // ---------------------------------------------------------------------------
 
-// Tiptap document JSON shape (loosely typed — Tiptap manages it internally).
+// Tiptap document JSON shape. Compatible with @tiptap/core JSONContent without
+// importing Tiptap into server-side modules.
+export type TiptapNode = {
+  type?: string;
+  attrs?: Record<string, unknown>;
+  content?: TiptapNode[];
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
+  text?: string;
+};
+
 export type TiptapDoc = {
   type: "doc";
-  content?: unknown[];
+  content?: TiptapNode[];
 };
 
 export type PageRow = {
