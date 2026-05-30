@@ -1,17 +1,22 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceRoleKey, getSupabaseUrl } from "./env";
+import type { Database } from "./types";
 
-let adminClient: ReturnType<typeof createClient> | null = null;
+let adminClient: SupabaseClient<Database> | null = null;
 
-export function createSupabaseAdminClient() {
+export function createSupabaseAdminClient(): SupabaseClient<Database> {
   if (adminClient) return adminClient;
-  adminClient = createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
+  adminClient = createClient<Database>(
+    getSupabaseUrl(),
+    getSupabaseServiceRoleKey(),
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
     },
-  });
+  );
   return adminClient;
 }

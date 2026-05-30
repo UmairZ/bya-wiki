@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/brand";
 import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +31,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-// Set the .dark class before paint based on system preference, then keep it in sync.
+// Toggle the .dark class before paint so the brand tokens land in the right
+// mode without a flash. Re-applies on system preference changes.
 const systemDarkModeScript = `(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)');function apply(d){document.documentElement.classList.toggle('dark',d)}apply(m.matches);m.addEventListener('change',function(e){apply(e.matches)})}catch(e){}})();`;
 
 export default function RootLayout({
@@ -43,11 +46,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: systemDarkModeScript }} />
-      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {systemDarkModeScript}
+        </Script>
         <Providers>{children}</Providers>
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );
