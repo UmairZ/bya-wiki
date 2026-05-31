@@ -4,9 +4,11 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
+import { getConnectionStatus } from "@/lib/calendar/google";
 import type { CalendarEvent } from "@/lib/calendar/types";
 import { MonthView } from "./month-view";
 import { EventRow } from "./event-row";
+import { NewEventButton } from "./new-event-button";
 
 export const metadata = { title: "Events" };
 
@@ -33,8 +35,14 @@ function splitUpcomingPast(events: CalendarEvent[]): {
 }
 
 export default async function EventsPage() {
-  const [current, icsUrl] = await Promise.all([getCurrentUser(), getIcsUrl()]);
+  const [current, icsUrl, googleStatus] = await Promise.all([
+    getCurrentUser(),
+    getIcsUrl(),
+    getConnectionStatus(),
+  ]);
   const isOwner = current?.profile.role === "owner";
+  const canWrite =
+    Boolean(current) && googleStatus.connected && Boolean(googleStatus.calendarId);
 
   if (!icsUrl) {
     return (
@@ -50,7 +58,7 @@ export default async function EventsPage() {
             <p className="font-medium">No calendar connected yet</p>
             <p className="text-sm text-muted-foreground">
               {isOwner
-                ? "Connect your Google Calendar ICS feed in Integrations."
+                ? "Set up the ICS feed (and ideally Google OAuth) in Integrations."
                 : "Ask the owner to connect a Google Calendar in Integrations."}
             </p>
           </div>
@@ -84,22 +92,41 @@ export default async function EventsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
           <p className="text-sm text-muted-foreground">
-            Synced from Google Calendar. Edits happen there; this view caches
-            for ~15 min.
+            {canWrite
+              ? `Reads from the ICS feed (cached ~15 min); writes go to "${googleStatus.calendarName ?? "the connected calendar"}".`
+              : "Synced from Google Calendar. Edits happen in Google; cached ~15 min."}
           </p>
         </div>
-        {isOwner && (
-          <Button
-            render={<Link href="/admin/integrations" />}
-            nativeButton={false}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className="size-4" aria-hidden />
-            Manage feed
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canWrite && <NewEventButton />}
+          {isOwner && (
+            <Button
+              render={<Link href="/admin/integrations" />}
+              nativeButton={false}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              Manage
+            </Button>
+          )}
+        </div>
       </header>
+
+      {!canWrite && current && isOwner && (
+        <Alert>
+          <AlertDescription>
+            Connect Google Calendar (write access) in{" "}
+            <Link
+              href="/admin/integrations"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              Integrations
+            </Link>{" "}
+            to let members create + edit events directly from the wiki.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {fetchError && (
         <Alert variant="destructive">
@@ -123,7 +150,7 @@ export default async function EventsPage() {
           <ul className="flex flex-col divide-y rounded-lg border bg-card">
             {upcoming.map((e) => (
               <li key={e.id}>
-                <EventRow event={e} />
+                <EventRow event={e} canEdit={canWrite} />
               </li>
             ))}
           </ul>
@@ -138,7 +165,7 @@ export default async function EventsPage() {
           <ul className="flex flex-col divide-y rounded-lg border bg-card opacity-80">
             {past.slice(0, 20).map((e) => (
               <li key={e.id}>
-                <EventRow event={e} />
+                <EventRow event={e} canEdit={canWrite} />
               </li>
             ))}
           </ul>

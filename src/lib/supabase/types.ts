@@ -184,6 +184,44 @@ export type AppSettingsUpdate = {
 };
 
 // ---------------------------------------------------------------------------
+// google_oauth_connection (singleton, id=1) — server-only via admin client
+// ---------------------------------------------------------------------------
+
+export type GoogleOAuthConnectionRow = {
+  id: 1;
+  refresh_token: string;
+  access_token: string | null;
+  access_token_expires_at: string | null;
+  connected_email: string | null;
+  calendar_id: string | null;
+  calendar_name: string | null;
+  connected_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GoogleOAuthConnectionInsert = {
+  id?: 1;
+  refresh_token: string;
+  access_token?: string | null;
+  access_token_expires_at?: string | null;
+  connected_email?: string | null;
+  calendar_id?: string | null;
+  calendar_name?: string | null;
+  connected_by?: string | null;
+};
+
+export type GoogleOAuthConnectionUpdate = {
+  refresh_token?: string;
+  access_token?: string | null;
+  access_token_expires_at?: string | null;
+  connected_email?: string | null;
+  calendar_id?: string | null;
+  calendar_name?: string | null;
+  connected_by?: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
 
@@ -224,6 +262,12 @@ export type Database = {
         Row: AppSettingsRow;
         Insert: AppSettingsRow;
         Update: AppSettingsUpdate;
+        Relationships: [];
+      };
+      google_oauth_connection: {
+        Row: GoogleOAuthConnectionRow;
+        Insert: GoogleOAuthConnectionInsert;
+        Update: GoogleOAuthConnectionUpdate;
         Relationships: [];
       };
     };

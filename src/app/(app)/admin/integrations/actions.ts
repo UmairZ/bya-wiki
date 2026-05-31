@@ -3,6 +3,14 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { requireOwner } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  clearConnection,
+  setSelectedCalendar,
+} from "@/lib/calendar/google";
+
+// ---------------------------------------------------------------------------
+// ICS feed URL
+// ---------------------------------------------------------------------------
 
 export type SaveIcsUrlState = { ok: true } | { error: string } | undefined;
 
@@ -45,5 +53,39 @@ export async function refreshCalendarAction(): Promise<{ ok: true }> {
   updateTag("calendar");
   revalidatePath("/events");
   revalidatePath("/");
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Google OAuth — calendar picker + disconnect
+// ---------------------------------------------------------------------------
+
+export type GoogleActionResult = { ok: true } | { ok: false; error: string };
+
+export async function selectGoogleCalendarAction(
+  calendarId: string,
+  calendarName: string,
+): Promise<GoogleActionResult> {
+  await requireOwner();
+  if (!calendarId) return { ok: false, error: "Pick a calendar." };
+  try {
+    await setSelectedCalendar(calendarId, calendarName);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+  revalidatePath("/admin/integrations");
+  revalidatePath("/events");
+  return { ok: true };
+}
+
+export async function disconnectGoogleAction(): Promise<GoogleActionResult> {
+  await requireOwner();
+  try {
+    await clearConnection();
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+  revalidatePath("/admin/integrations");
+  revalidatePath("/events");
   return { ok: true };
 }

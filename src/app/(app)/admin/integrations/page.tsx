@@ -2,9 +2,16 @@ import Link from "next/link";
 import { CalendarDays, ExternalLink, Info } from "lucide-react";
 import { requireOwner } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { IcsUrlForm } from "./ics-url-form";
+import { GoogleSection } from "./google-section";
 
 export const metadata = { title: "Integrations" };
+
+type SearchParams = Promise<{
+  google?: string;
+  google_msg?: string;
+}>;
 
 async function loadIcsUrl(): Promise<string> {
   const supabase = await createSupabaseServerClient();
@@ -16,8 +23,13 @@ async function loadIcsUrl(): Promise<string> {
   return data?.google_calendar_ics_url ?? "";
 }
 
-export default async function IntegrationsPage() {
+export default async function IntegrationsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   await requireOwner();
+  const { google, google_msg } = await searchParams;
   const currentUrl = await loadIcsUrl();
 
   return (
@@ -25,9 +37,27 @@ export default async function IntegrationsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
         <p className="text-sm text-muted-foreground">
-          External sources the wiki pulls from.
+          External sources the wiki pulls from and writes to.
         </p>
       </header>
+
+      {google === "error" && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Couldn't connect Google Calendar
+            {google_msg ? `: ${google_msg}` : "."}
+          </AlertDescription>
+        </Alert>
+      )}
+      {google === "ok" && (
+        <Alert>
+          <AlertDescription>
+            Google Calendar connected. Pick a calendar to write to below.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <GoogleSection />
 
       <section className="flex flex-col gap-4 rounded-lg border bg-card p-5">
         <div className="flex items-start gap-3">
@@ -35,17 +65,19 @@ export default async function IntegrationsPage() {
             <CalendarDays className="size-5" aria-hidden />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h2 className="text-base font-semibold">Google Calendar</h2>
+            <h2 className="text-base font-semibold">
+              Calendar feed (read path)
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Paste the calendar's secret ICS URL. The wiki fetches it
-              server-side with a 15-minute cache and renders events on{" "}
+              Paste the calendar's ICS URL. The wiki fetches it with a
+              15-minute cache and renders events on{" "}
               <Link
                 href="/events"
                 className="text-primary underline-offset-4 hover:underline"
               >
                 /events
               </Link>{" "}
-              + Home.
+              + Home. The OAuth connection above handles writes.
             </p>
           </div>
         </div>
@@ -84,8 +116,7 @@ export default async function IntegrationsPage() {
           </ol>
           <p className="mt-3 text-xs text-muted-foreground">
             The secret URL acts like a password — anyone who has it can read
-            the calendar. Use the secret URL if the calendar is private; only
-            use the public URL if the calendar is intentionally public.
+            the calendar.
           </p>
         </details>
       </section>
