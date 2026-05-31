@@ -70,7 +70,7 @@ export async function setPageStatusAction(
   }
 
   revalidatePath(`/p/${id}`);
-  revalidatePath("/browse");
+  revalidatePath("/");
   return { ok: true, updated_at: data.updated_at, excerpt: data.excerpt };
 }
 
@@ -125,7 +125,7 @@ export async function softDeletePageAction(id: string): Promise<DeleteResult> {
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/browse");
+  revalidatePath("/");
   revalidatePath("/");
   revalidatePath("/admin/trash");
   return { ok: true, categorySlug: category?.slug ?? null };

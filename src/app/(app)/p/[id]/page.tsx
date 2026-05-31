@@ -69,14 +69,14 @@ export default async function PageView({ params }: Props) {
     <div className="mx-auto flex w-full max-w-6xl gap-0 px-4 py-6 md:px-8 md:py-10">
       <article className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-          <Link href="/browse" className="hover:text-foreground">
-            Browse
+          <Link href="/" className="hover:text-foreground">
+            Home
           </Link>
           {category && (
             <>
               <span aria-hidden> / </span>
               <Link
-                href={`/browse/${category.slug}`}
+                href={`/c/${category.slug}`}
                 className="hover:text-foreground"
               >
                 {category.name}
@@ -92,7 +92,7 @@ export default async function PageView({ params }: Props) {
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {category && (
                 <Link
-                  href={`/browse/${category.slug}`}
+                  href={`/c/${category.slug}`}
                   className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-muted"
                 >
                   <CategoryIcon name={category.icon} className="size-3.5" />

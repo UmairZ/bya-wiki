@@ -44,15 +44,19 @@ export async function createPageAction(
       created_by: current.userId,
       updated_by: current.userId,
     })
-    .select("id, category_id")
-    .single();
+    .select("id, category_id, category:categories(slug)")
+    .single<{
+      id: string;
+      category_id: string;
+      category: { slug: string } | null;
+    }>();
 
   if (insertErr || !inserted) {
     return { error: insertErr?.message ?? "Could not create page." };
   }
 
-  // Revalidate the category and the browse index so counts update.
-  revalidatePath("/browse");
-  revalidatePath(`/browse/${categoryId}`);
+  // Home + category overview pull live counts; bust both.
+  revalidatePath("/");
+  if (inserted.category?.slug) revalidatePath(`/c/${inserted.category.slug}`);
   redirect(`/p/${inserted.id}`);
 }

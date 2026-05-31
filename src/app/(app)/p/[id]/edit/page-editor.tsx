@@ -198,9 +198,7 @@ export function PageEditor({
       return;
     }
     toast.success("Moved to trash.");
-    router.push(
-      result.categorySlug ? `/browse/${result.categorySlug}` : "/browse",
-    );
+    router.push(result.categorySlug ? `/c/${result.categorySlug}` : "/");
   }
 
   return (
@@ -209,14 +207,14 @@ export function PageEditor({
         aria-label="Breadcrumb"
         className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
       >
-        <Link href="/browse" className="hover:text-foreground">
-          Browse
+        <Link href="/" className="hover:text-foreground">
+          Home
         </Link>
         {category && (
           <>
             <span aria-hidden>/</span>
             <Link
-              href={`/browse/${category.slug}`}
+              href={`/c/${category.slug}`}
               className="inline-flex items-center gap-1 hover:text-foreground"
             >
               <CategoryIcon name={category.icon} className="size-3.5" />

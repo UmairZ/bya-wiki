@@ -168,6 +168,50 @@ export type PageTagInsert = PageTagRow;
 export type PageTagUpdate = Partial<PageTagRow>;
 
 // ---------------------------------------------------------------------------
+// resources (files attached to a category)
+// ---------------------------------------------------------------------------
+
+export type ResourceRow = {
+  id: string;
+  category_id: string;
+  title: string;
+  description: string | null;
+  storage_path: string;
+  file_type: string;
+  file_size: number;
+  pinned: boolean;
+  sort_order: number;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
+export type ResourceInsert = {
+  id?: string;
+  category_id: string;
+  title: string;
+  description?: string | null;
+  storage_path: string;
+  file_type: string;
+  file_size?: number;
+  pinned?: boolean;
+  sort_order?: number;
+  uploaded_by?: string | null;
+};
+
+export type ResourceUpdate = {
+  title?: string;
+  description?: string | null;
+  storage_path?: string;
+  file_type?: string;
+  file_size?: number;
+  pinned?: boolean;
+  sort_order?: number;
+  deleted_at?: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // app_settings (singleton, id=1)
 // ---------------------------------------------------------------------------
 
@@ -256,6 +300,12 @@ export type Database = {
         Row: PageTagRow;
         Insert: PageTagInsert;
         Update: PageTagUpdate;
+        Relationships: [];
+      };
+      resources: {
+        Row: ResourceRow;
+        Insert: ResourceInsert;
+        Update: ResourceUpdate;
         Relationships: [];
       };
       app_settings: {

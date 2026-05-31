@@ -69,7 +69,7 @@ export function CategoryRowEditor({
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-medium">{category.name}</span>
           <span className="truncate text-xs text-muted-foreground">
-            /browse/{category.slug} · {category.page_count}{" "}
+            /c/{category.slug} · {category.page_count}{" "}
             {category.page_count === 1 ? "page" : "pages"}
           </span>
         </div>
@@ -149,7 +149,7 @@ export function CategoryRowEditor({
               autoFocus
             />
             <p className="text-xs text-muted-foreground">
-              Slug stays as /browse/{category.slug}.
+              Slug stays as /c/{category.slug}.
             </p>
           </div>
           <DialogFooter>

@@ -10,7 +10,7 @@ export type ActionResult<T = null> =
   | { ok: false; error: string };
 
 async function revalidateBrowse() {
-  revalidatePath("/browse");
+  revalidatePath("/");
   revalidatePath("/admin/categories");
 }
 
