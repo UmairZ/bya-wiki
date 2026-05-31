@@ -25,7 +25,8 @@ export const SlashCommandExtension = Extension.create({
         char: "/",
         startOfLine: false,
         allowSpaces: false,
-        items: ({ query }) => filterCommands(query).slice(0, 10),
+        items: ({ query, editor }) =>
+          filterCommands(query, editor).slice(0, 12),
         command: ({ editor, range, props }) => {
           props.run(editor, range);
         },

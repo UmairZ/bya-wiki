@@ -8,6 +8,7 @@ import { CategoryIcon } from "@/components/category-icon";
 import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format-date";
 import { buildBaseExtensions } from "@/lib/tiptap/extensions";
+import { InteractiveTabs } from "@/lib/tiptap/blocks/tabs-enhancer";
 import type { TiptapDoc } from "@/lib/supabase/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -106,6 +107,7 @@ export default async function PageView({ params }: Props) {
           {current && (
             <Button
               render={<Link href={`/p/${page.id}/edit`} />}
+              nativeButton={false}
               variant="outline"
               size="sm"
             >
@@ -129,12 +131,15 @@ export default async function PageView({ params }: Props) {
           </p>
         </div>
       ) : (
-        <div
-          className="prose prose-neutral max-w-none dark:prose-invert"
-          // generateHTML output is from a strict ProseMirror schema — Tiptap
-          // round-trips JSON through ProseMirror, so the output is safe.
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+        <>
+          <div
+            className="prose prose-neutral max-w-none dark:prose-invert"
+            // generateHTML output is from a strict ProseMirror schema — Tiptap
+            // round-trips JSON through ProseMirror, so the output is safe.
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+          <InteractiveTabs />
+        </>
       )}
     </article>
   );

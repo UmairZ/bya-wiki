@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/category-icon";
-import { buildBaseExtensions } from "@/lib/tiptap/extensions";
+import { buildClientExtensions } from "@/lib/tiptap/extensions-client";
 import { SlashCommandExtension } from "@/lib/tiptap/slash-extension";
 import type { PageStatus, TiptapDoc } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
@@ -102,7 +102,7 @@ export function PageEditor({
   }, [flush]);
 
   const extensions = useMemo(
-    () => [...buildBaseExtensions(), SlashCommandExtension],
+    () => [...buildClientExtensions(), SlashCommandExtension],
     [],
   );
 
@@ -200,6 +200,7 @@ export function PageEditor({
           <div className="flex items-center gap-2">
             <Button
               render={<Link href={`/p/${page.id}`} />}
+              nativeButton={false}
               variant="outline"
               size="sm"
             >

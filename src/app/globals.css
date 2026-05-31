@@ -147,3 +147,48 @@
     @apply font-sans;
   }
 }
+
+/* Editor-only column visualization: numbered labels + dashed borders so
+   you can tell columns apart while writing. The read view stays clean. */
+.ProseMirror [data-block="columns"] {
+  counter-reset: bya-col;
+}
+.ProseMirror [data-block="column"] {
+  counter-increment: bya-col;
+  position: relative;
+  border: 1px dashed var(--border);
+  border-radius: 0.375rem;
+  padding: 1.5rem 0.75rem 0.75rem;
+}
+.ProseMirror [data-block="column"]::before {
+  content: "Column " counter(bya-col);
+  position: absolute;
+  top: 0.375rem;
+  left: 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+/* Tabs visibility — driven by data-active-panel on the tabs container.
+   The container is React-controlled (NodeViewWrapper in edit view, the
+   server-rendered div in read view) so this stays in sync without JS
+   touching the section elements. Supports up to 10 tabs. */
+[data-block="tabs"] section[data-block="tab-panel"] {
+  display: none;
+}
+[data-block="tabs"][data-active-panel="0"] section[data-block="tab-panel"]:nth-of-type(1),
+[data-block="tabs"][data-active-panel="1"] section[data-block="tab-panel"]:nth-of-type(2),
+[data-block="tabs"][data-active-panel="2"] section[data-block="tab-panel"]:nth-of-type(3),
+[data-block="tabs"][data-active-panel="3"] section[data-block="tab-panel"]:nth-of-type(4),
+[data-block="tabs"][data-active-panel="4"] section[data-block="tab-panel"]:nth-of-type(5),
+[data-block="tabs"][data-active-panel="5"] section[data-block="tab-panel"]:nth-of-type(6),
+[data-block="tabs"][data-active-panel="6"] section[data-block="tab-panel"]:nth-of-type(7),
+[data-block="tabs"][data-active-panel="7"] section[data-block="tab-panel"]:nth-of-type(8),
+[data-block="tabs"][data-active-panel="8"] section[data-block="tab-panel"]:nth-of-type(9),
+[data-block="tabs"][data-active-panel="9"] section[data-block="tab-panel"]:nth-of-type(10) {
+  display: block;
+}

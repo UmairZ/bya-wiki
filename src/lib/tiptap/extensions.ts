@@ -2,6 +2,11 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
 import { Placeholder } from "@tiptap/extensions";
+import { TabPanelBlock, TabsBlock } from "./blocks/tabs";
+import { CollapsibleBlock } from "./blocks/collapsible";
+import { CalloutBlock } from "./blocks/callout";
+import { ColumnBlock, ColumnsBlock } from "./blocks/columns";
+import { StepBlock, StepsBlock } from "./blocks/steps";
 
 /**
  * Editor extensions shared between the client editor (/p/[id]/edit) and the
@@ -44,5 +49,15 @@ export function buildBaseExtensions(opts?: { placeholder?: string }) {
       emptyEditorClass:
         "before:content-[attr(data-placeholder)] before:text-muted-foreground before:float-left before:h-0 before:pointer-events-none",
     }),
+    // Custom structured-layout blocks (Phase 2c). These are SCHEMA-ONLY here;
+    // React NodeViews are attached on the client in extensions-client.ts.
+    TabsBlock,
+    TabPanelBlock,
+    CollapsibleBlock,
+    CalloutBlock,
+    ColumnsBlock,
+    ColumnBlock,
+    StepsBlock,
+    StepBlock,
   ];
 }

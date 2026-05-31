@@ -1,14 +1,19 @@
 import {
   Code,
+  Columns2,
   Heading1,
   Heading2,
   Heading3,
+  Info,
+  LayoutPanelTop,
   List,
   ListChecks,
   ListOrdered,
+  ListTree,
   Minus,
   Pilcrow,
   Quote,
+  Tally5,
   type LucideIcon,
 } from "lucide-react";
 import type { Editor, Range } from "@tiptap/core";
@@ -19,6 +24,8 @@ export type SlashCommand = {
   description: string;
   Icon: LucideIcon;
   keywords?: string[];
+  /** Return false to hide this command in the current context. */
+  available?: (editor: Editor) => boolean;
   run: (editor: Editor, range: Range) => void;
 };
 
@@ -133,12 +140,123 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
+  // ------------------ Custom structured-layout blocks ------------------
+  {
+    key: "tabs",
+    title: "Tabs",
+    description: "Switchable panels on one page",
+    Icon: LayoutPanelTop,
+    keywords: ["tabs", "switch"],
+    available: (editor) => !editor.isActive("tabs") && !editor.isActive("tabPanel"),
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "tabs",
+          attrs: { activePanel: 0 },
+          content: [
+            {
+              type: "tabPanel",
+              attrs: { title: "Tab 1" },
+              content: [{ type: "paragraph" }],
+            },
+            {
+              type: "tabPanel",
+              attrs: { title: "Tab 2" },
+              content: [{ type: "paragraph" }],
+            },
+          ],
+        })
+        .run(),
+  },
+  {
+    key: "collapsible",
+    title: "Collapsible",
+    description: "Section that opens on click",
+    Icon: ListTree,
+    keywords: ["toggle", "accordion", "expand", "collapsible"],
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "collapsible",
+          attrs: { title: "Section", open: true },
+          content: [{ type: "paragraph" }],
+        })
+        .run(),
+  },
+  {
+    key: "callout",
+    title: "Callout",
+    description: "Info / warning / tip / note panel",
+    Icon: Info,
+    keywords: ["callout", "note", "warning", "tip", "info", "admonition"],
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "callout",
+          attrs: { variant: "info" },
+          content: [{ type: "paragraph" }],
+        })
+        .run(),
+  },
+  {
+    key: "columns",
+    title: "Columns",
+    description: "Side-by-side layout that reflows on mobile",
+    Icon: Columns2,
+    keywords: ["columns", "grid", "side-by-side"],
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "columns",
+          content: [
+            { type: "column", content: [{ type: "paragraph" }] },
+            { type: "column", content: [{ type: "paragraph" }] },
+          ],
+        })
+        .run(),
+  },
+  {
+    key: "steps",
+    title: "Steps",
+    description: "Numbered procedure",
+    Icon: Tally5,
+    keywords: ["steps", "stepper", "procedure", "sop"],
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({
+          type: "steps",
+          content: [
+            { type: "step", content: [{ type: "paragraph" }] },
+            { type: "step", content: [{ type: "paragraph" }] },
+            { type: "step", content: [{ type: "paragraph" }] },
+          ],
+        })
+        .run(),
+  },
 ];
 
-export function filterCommands(query: string): SlashCommand[] {
+export function filterCommands(query: string, editor: Editor): SlashCommand[] {
   const q = query.toLowerCase().trim();
-  if (!q) return SLASH_COMMANDS;
-  return SLASH_COMMANDS.filter((cmd) => {
+  const usable = SLASH_COMMANDS.filter((cmd) =>
+    cmd.available ? cmd.available(editor) : true,
+  );
+  if (!q) return usable;
+  return usable.filter((cmd) => {
     if (cmd.title.toLowerCase().includes(q)) return true;
     if (cmd.keywords?.some((k) => k.toLowerCase().includes(q))) return true;
     return false;
