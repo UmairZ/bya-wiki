@@ -168,6 +168,22 @@ export type PageTagInsert = PageTagRow;
 export type PageTagUpdate = Partial<PageTagRow>;
 
 // ---------------------------------------------------------------------------
+// app_settings (singleton, id=1)
+// ---------------------------------------------------------------------------
+
+export type AppSettingsRow = {
+  id: 1;
+  google_calendar_ics_url: string | null;
+  updated_at: string;
+  updated_by: string | null;
+};
+
+export type AppSettingsUpdate = {
+  google_calendar_ics_url?: string | null;
+  updated_by?: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
 
@@ -202,6 +218,12 @@ export type Database = {
         Row: PageTagRow;
         Insert: PageTagInsert;
         Update: PageTagUpdate;
+        Relationships: [];
+      };
+      app_settings: {
+        Row: AppSettingsRow;
+        Insert: AppSettingsRow;
+        Update: AppSettingsUpdate;
         Relationships: [];
       };
     };

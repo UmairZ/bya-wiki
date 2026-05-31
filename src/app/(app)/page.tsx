@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Pin } from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, Pin } from "lucide-react";
 import { APP_NAME, LOGO_ALT, LOGO_SRC } from "@/lib/brand";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatRelative } from "@/lib/format-date";
+import { formatEventWhen } from "@/lib/date-time";
+import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
+import type { CalendarEvent } from "@/lib/calendar/types";
 
 export const metadata = { title: "Home" };
 
@@ -21,10 +23,11 @@ type HomePage = {
 async function loadHomeData(): Promise<{
   pinned: HomePage[];
   recent: HomePage[];
+  upcoming: CalendarEvent[];
 }> {
   const supabase = await createSupabaseServerClient();
 
-  const [pinnedResp, recentResp, categoriesResp] = await Promise.all([
+  const [pinnedResp, recentResp, categoriesResp, icsUrl] = await Promise.all([
     supabase
       .from("pages")
       .select("id, title, excerpt, updated_at, category_id")
@@ -42,6 +45,7 @@ async function loadHomeData(): Promise<{
       .order("updated_at", { ascending: false })
       .limit(8),
     supabase.from("categories").select("id, name, slug"),
+    getIcsUrl(),
   ]);
 
   const cats = new Map(
@@ -61,9 +65,26 @@ async function loadHomeData(): Promise<{
     });
   }
 
+  let upcoming: CalendarEvent[] = [];
+  if (icsUrl) {
+    try {
+      const all = await getCalendarEvents({ icsUrl, pastWindowDays: 0 });
+      const now = Date.now();
+      upcoming = all
+        .filter((e) => {
+          const endOrStart = e.ends_at ?? e.starts_at;
+          return new Date(endOrStart).getTime() >= now;
+        })
+        .slice(0, 5);
+    } catch {
+      upcoming = [];
+    }
+  }
+
   return {
     pinned: decorate(pinnedResp.data),
     recent: decorate(recentResp.data),
+    upcoming,
   };
 }
 
@@ -97,7 +118,7 @@ function EmptyHint({ children }: { children: React.ReactNode }) {
 export default async function HomePage() {
   const { profile } = await requireCurrentUser();
   const firstName = profile.display_name.split(/\s+/)[0] || profile.display_name;
-  const { pinned, recent } = await loadHomeData();
+  const { pinned, recent, upcoming } = await loadHomeData();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
@@ -167,16 +188,61 @@ export default async function HomePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <CalendarDays className="size-3.5" aria-hidden />
               Upcoming events
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 pt-0">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-2/3" />
-            <p className="pt-2 text-xs text-muted-foreground">
-              Next events from the calendar will surface here (Phase 5).
-            </p>
+          <CardContent className="flex flex-col gap-0.5 pt-0">
+            {upcoming.length === 0 ? (
+              <EmptyHint>
+                Nothing on the calendar.{" "}
+                <Link
+                  href="/events"
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  Open events
+                </Link>
+                .
+              </EmptyHint>
+            ) : (
+              upcoming.map((event) => (
+                <Link
+                  key={event.id}
+                  href="/events"
+                  prefetch
+                  className="group flex items-start gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-brand-tint/40 focus-visible:bg-brand-tint/40 focus-visible:outline-none"
+                >
+                  <div
+                    className="flex size-9 shrink-0 flex-col items-center justify-center rounded-md bg-brand-tint text-brand-tint-foreground"
+                    aria-hidden
+                  >
+                    <span className="text-[10px] font-semibold uppercase">
+                      {new Date(event.starts_at).toLocaleString(undefined, {
+                        month: "short",
+                      })}
+                    </span>
+                    <span className="text-sm font-bold leading-none">
+                      {new Date(event.starts_at).getDate()}
+                    </span>
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium">
+                      {event.title}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {formatEventWhen(event)}
+                    </span>
+                    {event.location && (
+                      <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                        <MapPin className="size-3" aria-hidden />
+                        {event.location}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
           </CardContent>
         </Card>
       </section>
