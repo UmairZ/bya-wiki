@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bold,
@@ -17,8 +18,11 @@ import {
   ListChecks,
   ListOrdered,
   Minus,
+  Pin,
+  PinOff,
   Quote,
   Strikethrough,
+  Trash2,
   Underline as UnderlineIcon,
 } from "lucide-react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
@@ -30,7 +34,12 @@ import { buildClientExtensions } from "@/lib/tiptap/extensions-client";
 import { SlashCommandExtension } from "@/lib/tiptap/slash-extension";
 import type { PageStatus, TiptapDoc } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { savePageAction, setPageStatusAction } from "./actions";
+import {
+  savePageAction,
+  setPagePinnedAction,
+  setPageStatusAction,
+  softDeletePageAction,
+} from "./actions";
 
 type EditorPage = {
   id: string;
@@ -38,6 +47,7 @@ type EditorPage = {
   slug: string;
   content: TiptapDoc;
   status: PageStatus;
+  pinned: boolean;
   updated_at: string;
   category_id: string;
 };
@@ -59,11 +69,15 @@ export function PageEditor({
   page: EditorPage;
   category: EditorCategory | null;
 }) {
+  const router = useRouter();
   const [title, setTitle] = useState(page.title);
   const [status, setStatus] = useState<PageStatus>(page.status);
+  const [pinned, setPinned] = useState(page.pinned);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedAt, setSavedAt] = useState<string>(page.updated_at);
   const [statusPending, setStatusPending] = useState(false);
+  const [pinPending, setPinPending] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
 
   // Refs hold the freshest values so the debounce flush always saves the
   // latest title + content, even if React state hasn't flushed yet.
@@ -155,6 +169,40 @@ export function PageEditor({
     }
   }
 
+  async function handleTogglePinned() {
+    const next = !pinned;
+    setPinPending(true);
+    const result = await setPagePinnedAction(page.id, next);
+    setPinPending(false);
+    if (result.ok) {
+      setPinned(next);
+      toast.success(next ? "Pinned to home." : "Unpinned.");
+    } else {
+      toast.error(result.error);
+    }
+  }
+
+  async function handleDelete() {
+    if (
+      !window.confirm(
+        `Move "${title || "this page"}" to trash? The owner can restore it from /admin/trash.`,
+      )
+    ) {
+      return;
+    }
+    setDeletePending(true);
+    const result = await softDeletePageAction(page.id);
+    if (!result.ok) {
+      setDeletePending(false);
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Moved to trash.");
+    router.push(
+      result.categorySlug ? `/browse/${result.categorySlug}` : "/browse",
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
       <nav
@@ -209,12 +257,38 @@ export function PageEditor({
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              disabled={pinPending}
+              onClick={handleTogglePinned}
+              title={pinned ? "Unpin from home" : "Pin to home"}
+              aria-pressed={pinned}
+            >
+              {pinned ? (
+                <PinOff className="size-4" aria-hidden />
+              ) : (
+                <Pin className="size-4" aria-hidden />
+              )}
+              {pinned ? "Unpin" : "Pin"}
+            </Button>
+            <Button
+              size="sm"
               variant={status === "published" ? "outline" : "default"}
               disabled={statusPending}
               onClick={handleToggleStatus}
             >
               <FileCheck className="size-4" aria-hidden />
               {status === "published" ? "Move to draft" : "Publish"}
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              disabled={deletePending}
+              onClick={handleDelete}
+              title="Move to trash"
+              aria-label="Move to trash"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="size-4" aria-hidden />
             </Button>
           </div>
         </div>

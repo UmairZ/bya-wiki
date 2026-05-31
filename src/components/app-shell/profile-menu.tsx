@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { FolderTree, KeyRound, LogOut, Users } from "lucide-react";
+import { FolderTree, KeyRound, LogOut, Trash2, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -132,6 +132,10 @@ export function ProfileMenu({
               <DropdownMenuItem render={<Link href="/admin/categories" />}>
                 <FolderTree className="size-4" aria-hidden />
                 Categories
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/admin/trash" />}>
+                <Trash2 className="size-4" aria-hidden />
+                Trash
               </DropdownMenuItem>
             </>
           )}

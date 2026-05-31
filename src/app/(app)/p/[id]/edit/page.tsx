@@ -26,7 +26,7 @@ export default async function EditPageRoute({ params }: Props) {
   const { data: page, error } = await supabase
     .from("pages")
     .select(
-      "id, title, slug, content, status, updated_at, category_id, deleted_at",
+      "id, title, slug, content, status, pinned, updated_at, category_id, deleted_at",
     )
     .eq("id", id)
     .single<
@@ -37,6 +37,7 @@ export default async function EditPageRoute({ params }: Props) {
         | "slug"
         | "content"
         | "status"
+        | "pinned"
         | "updated_at"
         | "category_id"
         | "deleted_at"
@@ -58,6 +59,7 @@ export default async function EditPageRoute({ params }: Props) {
         slug: page.slug,
         content: page.content,
         status: page.status,
+        pinned: page.pinned,
         updated_at: page.updated_at,
         category_id: page.category_id,
       }}
