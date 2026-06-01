@@ -69,8 +69,8 @@ export function CategoryRowEditor({
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-medium">{category.name}</span>
           <span className="truncate text-xs text-muted-foreground">
-            /c/{category.slug} · {category.page_count}{" "}
-            {category.page_count === 1 ? "page" : "pages"}
+            /c/{category.slug} · {category.item_count}{" "}
+            {category.item_count === 1 ? "item" : "items"}
           </span>
         </div>
 

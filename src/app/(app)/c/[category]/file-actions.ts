@@ -40,10 +40,23 @@ export async function uploadFileAction(
     originalName: file.name || "file",
   });
 
+  // Read the File into a Uint8Array on the server. Passing the raw File
+  // object through to @supabase/storage-js crashes the Next.js worker
+  // (the File proxy doesn't round-trip cleanly across the action boundary).
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(await file.arrayBuffer());
+  } catch (err) {
+    return {
+      ok: false,
+      error: `Failed to read file: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+
   try {
     await uploadToStorage({
       path,
-      body: file,
+      body: bytes,
       contentType: file.type || "application/octet-stream",
     });
   } catch (err) {

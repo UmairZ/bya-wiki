@@ -11,18 +11,19 @@ export type CategoryWithCount = {
   slug: string;
   icon: string | null;
   sort_order: number;
-  page_count: number;
+  item_count: number;
 };
 
 async function loadCategories(): Promise<CategoryWithCount[]> {
   const supabase = await createSupabaseServerClient();
-  const [catsResp, pagesResp] = await Promise.all([
+  const [catsResp, pagesResp, filesResp] = await Promise.all([
     supabase
       .from("categories")
       .select("id, name, slug, icon, sort_order")
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
     supabase.from("pages").select("category_id").is("deleted_at", null),
+    supabase.from("resources").select("category_id").is("deleted_at", null),
   ]);
   if (catsResp.error) throw catsResp.error;
 
@@ -30,9 +31,12 @@ async function loadCategories(): Promise<CategoryWithCount[]> {
   for (const row of pagesResp.data ?? []) {
     counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
   }
+  for (const row of filesResp.data ?? []) {
+    counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+  }
   return (catsResp.data ?? []).map((c) => ({
     ...c,
-    page_count: counts.get(c.id) ?? 0,
+    item_count: counts.get(c.id) ?? 0,
   }));
 }
 

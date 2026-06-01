@@ -37,7 +37,7 @@ type CategoryWithCount = {
   name: string;
   slug: string;
   icon: string | null;
-  page_count: number;
+  item_count: number;
 };
 
 async function loadHomeData(): Promise<{
@@ -51,6 +51,7 @@ async function loadHomeData(): Promise<{
   const [
     categoriesResp,
     livePagesResp,
+    liveFilesResp,
     pinnedPagesResp,
     recentPagesResp,
     pinnedFilesResp,
@@ -64,6 +65,10 @@ async function loadHomeData(): Promise<{
       .order("name", { ascending: true }),
     supabase
       .from("pages")
+      .select("category_id")
+      .is("deleted_at", null),
+    supabase
+      .from("resources")
       .select("category_id")
       .is("deleted_at", null),
     supabase
@@ -108,13 +113,16 @@ async function loadHomeData(): Promise<{
   for (const row of livePagesResp.data ?? []) {
     counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
   }
+  for (const row of liveFilesResp.data ?? []) {
+    counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+  }
   const categories: CategoryWithCount[] = (categoriesResp.data ?? []).map(
     (c) => ({
       id: c.id,
       name: c.name,
       slug: c.slug,
       icon: c.icon,
-      page_count: counts.get(c.id) ?? 0,
+      item_count: counts.get(c.id) ?? 0,
     }),
   );
 
@@ -277,8 +285,8 @@ export default async function HomePage() {
                     {category.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {category.page_count}{" "}
-                    {category.page_count === 1 ? "page" : "pages"}
+                    {category.item_count}{" "}
+                    {category.item_count === 1 ? "item" : "items"}
                   </span>
                 </span>
                 <ChevronRight
