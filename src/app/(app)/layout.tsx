@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/auth/current-user";
+import { CommandPalette } from "@/components/app-shell/command-palette";
 import { DesktopSidebar } from "@/components/app-shell/desktop-sidebar";
 import { MobileBottomNav } from "@/components/app-shell/mobile-bottom-nav";
 import { MobileTopBar } from "@/components/app-shell/mobile-top-bar";
+import { ServiceWorkerRegistration } from "@/components/app-shell/service-worker-registration";
 
 export default async function AppLayout({
   children,
@@ -33,6 +35,8 @@ export default async function AppLayout({
         </main>
         <MobileBottomNav />
       </div>
+      <CommandPalette />
+      <ServiceWorkerRegistration />
     </div>
   );
 }

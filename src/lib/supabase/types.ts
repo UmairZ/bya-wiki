@@ -322,7 +322,27 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      search_wiki: {
+        Args: { q: string };
+        Returns: {
+          kind: "page" | "file";
+          id: string;
+          title: string;
+          snippet: string;
+          category_id: string | null;
+          category_name: string | null;
+          category_slug: string | null;
+          updated_at: string;
+          file_type: string | null;
+          rank: number;
+        }[];
+      };
+      current_user_role: {
+        Args: Record<string, never>;
+        Returns: "owner" | "editor" | null;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

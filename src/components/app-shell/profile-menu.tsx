@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { FolderTree, KeyRound, LogOut, Plug, Trash2, Users } from "lucide-react";
+import {
+  Download,
+  FolderTree,
+  KeyRound,
+  LogOut,
+  Plug,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -140,6 +148,14 @@ export function ProfileMenu({
               <DropdownMenuItem render={<Link href="/admin/trash" />}>
                 <Trash2 className="size-4" aria-hidden />
                 Trash
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={
+                  <a href="/admin/export" download />
+                }
+              >
+                <Download className="size-4" aria-hidden />
+                Export all (JSON)
               </DropdownMenuItem>
             </>
           )}

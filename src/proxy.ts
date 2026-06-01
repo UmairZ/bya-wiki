@@ -75,7 +75,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on every request except: Next internals, static assets, images, our SVG icons.
-    "/((?!_next/static|_next/image|favicon\\.ico|icon\\.svg|bya-logo-placeholder\\.svg|.*\\.(?:png|jpg|jpeg|gif|webp|svg|css|js|woff|woff2|ttf)$).*)",
+    // Run on every request except: Next internals, static assets, images,
+    // PWA manifest, our SVG icons.
+    "/((?!_next/static|_next/image|favicon\\.ico|icon\\.svg|bya-logo-placeholder\\.svg|manifest\\.webmanifest|sw\\.js|.*\\.(?:png|jpg|jpeg|gif|webp|svg|css|js|woff|woff2|ttf|webmanifest)$).*)",
   ],
 };
