@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import type {
   EventInstance,
   ParameterValue,
@@ -74,7 +75,14 @@ export type GetCalendarEventsOptions = {
   futureWindowDays?: number;
 };
 
-export async function getCalendarEvents({
+/**
+ * Internal: do the actual ICS fetch + parse + expand. Wrapped below in
+ * unstable_cache so the *parsed* CalendarEvent[] is cached across requests
+ * — not just the HTTP body. node-ical's parse + recurrence expansion is
+ * 100-500ms of CPU per call, and we'd otherwise pay it on every render of
+ * /events and /event/[id].
+ */
+async function fetchAndParseCalendar({
   icsUrl,
   pastWindowDays = 60,
   futureWindowDays = 180,
@@ -143,6 +151,38 @@ export async function getCalendarEvents({
       new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
   );
   return events;
+}
+
+/**
+ * Public API. Cached by (icsUrl, pastWindowDays, futureWindowDays) for 15
+ * minutes; tagged 'calendar' so existing revalidateTag('calendar') calls
+ * (in events/actions.ts after a Google Calendar write) bust the parsed
+ * cache, not just the HTTP body cache.
+ */
+const cachedFetchAndParse = unstable_cache(
+  async (
+    icsUrl: string,
+    pastWindowDays: number,
+    futureWindowDays: number,
+  ): Promise<CalendarEvent[]> => {
+    return fetchAndParseCalendar({
+      icsUrl,
+      pastWindowDays,
+      futureWindowDays,
+    });
+  },
+  ["calendar-events"],
+  { revalidate: 900, tags: ["calendar"] },
+);
+
+export async function getCalendarEvents(
+  options: GetCalendarEventsOptions,
+): Promise<CalendarEvent[]> {
+  return cachedFetchAndParse(
+    options.icsUrl,
+    options.pastWindowDays ?? 60,
+    options.futureWindowDays ?? 180,
+  );
 }
 
 /**

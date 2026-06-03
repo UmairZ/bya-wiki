@@ -9,10 +9,22 @@ export type ActionResult<T = null> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
-function revalidateEvent(eventId: string) {
+/** Revalidate just the event detail page. Use for edits that don't shift
+ *  the event's position on the Events Kanban (rename, assign, due date). */
+function revalidateEventDetail(eventId: string) {
+  revalidatePath(`/event/${encodeURIComponent(eventId)}`);
+}
+
+/** Revalidate the event detail page AND the Events Kanban. Use when the
+ *  edit can change the workflow's current stage (status toggle, add task,
+ *  delete task, move-to-stage), which moves the card between columns. */
+function revalidateEventAndKanban(eventId: string) {
   revalidatePath(`/event/${encodeURIComponent(eventId)}`);
   revalidatePath("/events");
 }
+
+/** Backwards-compat alias used by older actions; treat as the full revalidate. */
+const revalidateEvent = revalidateEventAndKanban;
 
 // ---------------------------------------------------------------------------
 // Workflows
@@ -198,7 +210,8 @@ export async function renameTaskAction(
   const { error } = await supabase.from("tasks").update(update).eq("id", taskId);
   if (error) return { ok: false, error: error.message };
 
-  revalidateEvent(eventId);
+  // Rename doesn't shift the event on the Kanban.
+  revalidateEventDetail(eventId);
   return { ok: true, data: null };
 }
 
@@ -228,7 +241,8 @@ export async function assignTaskAction(
     .eq("id", taskId);
   if (error) return { ok: false, error: error.message };
 
-  revalidateEvent(eventId);
+  // Assignment doesn't shift the event on the Kanban.
+  revalidateEventDetail(eventId);
   return { ok: true, data: null };
 }
 
@@ -245,7 +259,9 @@ export async function setTaskDueAction(
     .eq("id", taskId);
   if (error) return { ok: false, error: error.message };
 
-  revalidateEvent(eventId);
+  // Due date affects the overdue badge on /events, but seeing it 15 min
+  // stale is fine; saves time on every date change to skip that revalidate.
+  revalidateEventDetail(eventId);
   return { ok: true, data: null };
 }
 
