@@ -274,10 +274,13 @@ export async function updateEvent(
   eventId: string,
   payload: EventPayload,
 ): Promise<void> {
+  // PATCH (not PUT) so we don't clobber fields we don't manage — most
+  // importantly `recurrence` (RRULE). A PUT here was silently turning
+  // recurring events into one-off events on edit.
   const body = buildGoogleEventBody(payload);
   await callCalendarApi(
     `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
-    { method: "PUT", body: JSON.stringify(body) },
+    { method: "PATCH", body: JSON.stringify(body) },
   );
 }
 

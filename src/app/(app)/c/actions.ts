@@ -55,8 +55,8 @@ export async function createPageAction(
     return { error: insertErr?.message ?? "Could not create page." };
   }
 
-  // Home + category overview pull live counts; bust both.
-  revalidatePath("/");
+  // Resources grid + category overview pull live counts; bust both.
+  revalidatePath("/resources");
   if (inserted.category?.slug) revalidatePath(`/c/${inserted.category.slug}`);
   redirect(`/p/${inserted.id}`);
 }

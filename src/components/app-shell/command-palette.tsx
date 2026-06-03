@@ -23,8 +23,15 @@ export function CommandPalette() {
         setOpen((prev) => !prev);
       }
     }
+    function onOpen() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("bya:open-command-palette", onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("bya:open-command-palette", onOpen);
+    };
   }, []);
 
   return (

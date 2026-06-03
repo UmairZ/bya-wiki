@@ -198,7 +198,7 @@ export function PageEditor({
       return;
     }
     toast.success("Moved to trash.");
-    router.push(result.categorySlug ? `/c/${result.categorySlug}` : "/");
+    router.push(result.categorySlug ? `/c/${result.categorySlug}` : "/resources");
   }
 
   return (
@@ -207,8 +207,8 @@ export function PageEditor({
         aria-label="Breadcrumb"
         className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
       >
-        <Link href="/" className="hover:text-foreground">
-          Home
+        <Link href="/resources" className="hover:text-foreground">
+          Resources
         </Link>
         {category && (
           <>

@@ -266,6 +266,176 @@ export type GoogleOAuthConnectionUpdate = {
 };
 
 // ---------------------------------------------------------------------------
+// event_stages (Phase 7a)
+// ---------------------------------------------------------------------------
+
+export type EventStageRow = {
+  id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EventStageInsert = {
+  id?: string;
+  name: string;
+  sort_order?: number;
+};
+
+export type EventStageUpdate = {
+  name?: string;
+  sort_order?: number;
+};
+
+// ---------------------------------------------------------------------------
+// playbook_templates (Phase 7b)
+// ---------------------------------------------------------------------------
+
+export type PlaybookTemplateRow = {
+  id: string;
+  name: string;
+  description: string;
+  archived: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PlaybookTemplateInsert = {
+  id?: string;
+  name: string;
+  description?: string;
+  archived?: boolean;
+  created_by?: string | null;
+};
+
+export type PlaybookTemplateUpdate = {
+  name?: string;
+  description?: string;
+  archived?: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// playbook_template_tasks
+// ---------------------------------------------------------------------------
+
+export type AssigneeRole = "any" | "owner";
+
+export type PlaybookTemplateTaskRow = {
+  id: string;
+  template_id: string;
+  event_stage_id: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  default_offset_days: number | null;
+  default_assignee_role: AssigneeRole;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PlaybookTemplateTaskInsert = {
+  id?: string;
+  template_id: string;
+  event_stage_id: string;
+  title: string;
+  description?: string;
+  sort_order?: number;
+  default_offset_days?: number | null;
+  default_assignee_role?: AssigneeRole;
+};
+
+export type PlaybookTemplateTaskUpdate = {
+  event_stage_id?: string;
+  title?: string;
+  description?: string;
+  sort_order?: number;
+  default_offset_days?: number | null;
+  default_assignee_role?: AssigneeRole;
+};
+
+// ---------------------------------------------------------------------------
+// workflows
+// ---------------------------------------------------------------------------
+
+export type TargetKind = "event" | "page" | "space" | "standalone";
+
+export type WorkflowRow = {
+  id: string;
+  template_id: string | null;
+  name: string;
+  target_kind: TargetKind;
+  target_ref: string;
+  starts_at: string | null;
+  archived: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkflowInsert = {
+  id?: string;
+  template_id?: string | null;
+  name: string;
+  target_kind?: TargetKind;
+  target_ref: string;
+  starts_at?: string | null;
+  archived?: boolean;
+  created_by?: string | null;
+};
+
+export type WorkflowUpdate = {
+  name?: string;
+  starts_at?: string | null;
+  archived?: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// tasks
+// ---------------------------------------------------------------------------
+
+export type TaskStatus = "todo" | "in_progress" | "done" | "skipped";
+
+export type TaskRow = {
+  id: string;
+  workflow_id: string;
+  event_stage_id: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  status: TaskStatus;
+  assigned_to: string | null;
+  due_at: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TaskInsert = {
+  id?: string;
+  workflow_id: string;
+  event_stage_id: string;
+  title: string;
+  description?: string;
+  sort_order?: number;
+  status?: TaskStatus;
+  assigned_to?: string | null;
+  due_at?: string | null;
+};
+
+export type TaskUpdate = {
+  event_stage_id?: string;
+  title?: string;
+  description?: string;
+  sort_order?: number;
+  status?: TaskStatus;
+  assigned_to?: string | null;
+  due_at?: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
 
@@ -318,6 +488,36 @@ export type Database = {
         Row: GoogleOAuthConnectionRow;
         Insert: GoogleOAuthConnectionInsert;
         Update: GoogleOAuthConnectionUpdate;
+        Relationships: [];
+      };
+      event_stages: {
+        Row: EventStageRow;
+        Insert: EventStageInsert;
+        Update: EventStageUpdate;
+        Relationships: [];
+      };
+      playbook_templates: {
+        Row: PlaybookTemplateRow;
+        Insert: PlaybookTemplateInsert;
+        Update: PlaybookTemplateUpdate;
+        Relationships: [];
+      };
+      playbook_template_tasks: {
+        Row: PlaybookTemplateTaskRow;
+        Insert: PlaybookTemplateTaskInsert;
+        Update: PlaybookTemplateTaskUpdate;
+        Relationships: [];
+      };
+      workflows: {
+        Row: WorkflowRow;
+        Insert: WorkflowInsert;
+        Update: WorkflowUpdate;
+        Relationships: [];
+      };
+      tasks: {
+        Row: TaskRow;
+        Insert: TaskInsert;
+        Update: TaskUpdate;
         Relationships: [];
       };
     };

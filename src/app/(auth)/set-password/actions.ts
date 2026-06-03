@@ -47,5 +47,5 @@ export async function setPasswordAction(
     return { error: flagError.message };
   }
 
-  redirect("/");
+  redirect("/events");
 }

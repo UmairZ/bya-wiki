@@ -77,7 +77,7 @@ export default async function IntegrationsPage({
               >
                 /events
               </Link>{" "}
-              + Home. The OAuth connection above handles writes.
+              (Kanban + Past events). The OAuth connection above handles writes.
             </p>
           </div>
         </div>

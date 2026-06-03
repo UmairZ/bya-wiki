@@ -100,8 +100,8 @@ export default async function CategoryPage({ params }: Props) {
     <DropZone categoryId={category.id}>
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
-            Home
+          <Link href="/resources" className="hover:text-foreground">
+            Resources
           </Link>
           <span aria-hidden> / </span>
           <span className="text-foreground">{category.name}</span>

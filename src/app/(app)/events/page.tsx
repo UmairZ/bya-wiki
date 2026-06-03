@@ -1,44 +1,66 @@
 import Link from "next/link";
 import { CalendarDays, Plug, RefreshCw } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { getConnectionStatus } from "@/lib/calendar/google";
 import type { CalendarEvent } from "@/lib/calendar/types";
-import { MonthView } from "./month-view";
-import { EventRow } from "./event-row";
+import type { EventStageRow } from "@/lib/supabase/types";
+import { EventsKanban, type Stage } from "./events-kanban";
+import { PastEventsSection } from "./past-events-section";
 import { NewEventButton } from "./new-event-button";
+import { enrichEvents, splitForEventsPage } from "./workflow-state";
 
 export const metadata = { title: "Events" };
 
-function splitUpcomingPast(events: CalendarEvent[]): {
-  upcoming: CalendarEvent[];
-  past: CalendarEvent[];
-} {
-  const now = Date.now();
-  const upcoming: CalendarEvent[] = [];
-  const past: CalendarEvent[] = [];
-  for (const event of events) {
-    const endOrStart = event.ends_at ?? event.starts_at;
-    if (new Date(endOrStart).getTime() >= now) {
-      upcoming.push(event);
-    } else {
-      past.push(event);
-    }
+async function loadStages(): Promise<Stage[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("event_stages")
+    .select("id, name, sort_order")
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+  if (error) return [];
+  return data ?? [];
+}
+
+async function loadWorkflowsAndTasks(): Promise<{
+  workflows: { id: string; target_ref: string }[];
+  tasks: {
+    workflow_id: string;
+    event_stage_id: string;
+    status: string;
+    completed_at: string | null;
+    due_at: string | null;
+  }[];
+}> {
+  const supabase = await createSupabaseServerClient();
+  const { data: workflows, error: wErr } = await supabase
+    .from("workflows")
+    .select("id, target_ref")
+    .eq("target_kind", "event")
+    .eq("archived", false);
+  if (wErr || !workflows || workflows.length === 0) {
+    return { workflows: workflows ?? [], tasks: [] };
   }
-  past.sort(
-    (a, b) =>
-      new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
-  );
-  return { upcoming, past };
+  const ids = workflows.map((w) => w.id);
+  const { data: tasks, error: tErr } = await supabase
+    .from("tasks")
+    .select("workflow_id, event_stage_id, status, completed_at, due_at")
+    .in("workflow_id", ids);
+  if (tErr) return { workflows, tasks: [] };
+  return { workflows, tasks: tasks ?? [] };
 }
 
 export default async function EventsPage() {
-  const [current, icsUrl, googleStatus] = await Promise.all([
+  const [current, icsUrl, googleStatus, stages, wfState] = await Promise.all([
     getCurrentUser(),
     getIcsUrl(),
     getConnectionStatus(),
+    loadStages(),
+    loadWorkflowsAndTasks(),
   ]);
   const isOwner = current?.profile.role === "owner";
   const canWrite =
@@ -84,16 +106,30 @@ export default async function EventsPage() {
     fetchError = err instanceof Error ? err.message : String(err);
   }
 
-  const { upcoming, past } = splitUpcomingPast(events);
+  // Stage rows for enrichment carry created_at/updated_at fields the kanban
+  // component doesn't need; coerce to the slim Stage type for components.
+  const fullStages: EventStageRow[] = stages.map((s) => ({
+    ...s,
+    created_at: "",
+    updated_at: "",
+  }));
+
+  const enriched = enrichEvents(
+    events,
+    wfState.workflows,
+    wfState.tasks,
+    fullStages,
+  );
+  const { kanban, past } = splitForEventsPage(enriched);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
           <p className="text-sm text-muted-foreground">
             {canWrite
-              ? `Reads from the ICS feed (cached ~15 min); writes go to "${googleStatus.calendarName ?? "the connected calendar"}".`
+              ? `Cards auto-place by workflow stage. Writes go to "${googleStatus.calendarName ?? "the connected calendar"}".`
               : "Synced from Google Calendar. Edits happen in Google; cached ~15 min."}
           </p>
         </div>
@@ -113,6 +149,23 @@ export default async function EventsPage() {
         </div>
       </header>
 
+      {stages.length === 0 && isOwner && (
+        <Alert>
+          <AlertDescription>
+            Event stages aren&apos;t set up yet. Run migration{" "}
+            <code className="font-mono text-xs">0007_event_stages.sql</code> in
+            Supabase, or visit{" "}
+            <Link
+              href="/admin/event-stages"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              /admin/event-stages
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+
       {!canWrite && current && isOwner && (
         <Alert>
           <AlertDescription>
@@ -131,46 +184,19 @@ export default async function EventsPage() {
       {fetchError && (
         <Alert variant="destructive">
           <AlertDescription>
-            Couldn't load the calendar: {fetchError}
+            Couldn&apos;t load the calendar: {fetchError}
           </AlertDescription>
         </Alert>
       )}
 
-      {events.length > 0 && <MonthView events={events} />}
-
-      <section>
-        <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          Upcoming
+      <section aria-label="Upcoming & in progress" className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Upcoming &amp; in progress
         </h2>
-        {upcoming.length === 0 ? (
-          <div className="rounded-lg border border-dashed bg-card/50 px-6 py-12 text-center text-sm text-muted-foreground">
-            Nothing on the calendar in the next few months.
-          </div>
-        ) : (
-          <ul className="flex flex-col divide-y rounded-lg border bg-card">
-            {upcoming.map((e) => (
-              <li key={e.id}>
-                <EventRow event={e} canEdit={canWrite} />
-              </li>
-            ))}
-          </ul>
-        )}
+        <EventsKanban stages={stages} upcoming={kanban} />
       </section>
 
-      {past.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Past
-          </h2>
-          <ul className="flex flex-col divide-y rounded-lg border bg-card opacity-80">
-            {past.slice(0, 20).map((e) => (
-              <li key={e.id}>
-                <EventRow event={e} canEdit={canWrite} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <PastEventsSection events={past} />
     </div>
   );
 }

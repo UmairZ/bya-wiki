@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
+  ClipboardList,
   Download,
   FolderTree,
   KeyRound,
+  ListChecks,
   LogOut,
   Plug,
   Trash2,
@@ -140,6 +142,14 @@ export function ProfileMenu({
               <DropdownMenuItem render={<Link href="/admin/categories" />}>
                 <FolderTree className="size-4" aria-hidden />
                 Categories
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/admin/event-stages" />}>
+                <ListChecks className="size-4" aria-hidden />
+                Event stages
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/admin/playbooks" />}>
+                <ClipboardList className="size-4" aria-hidden />
+                Playbooks
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href="/admin/integrations" />}>
                 <Plug className="size-4" aria-hidden />

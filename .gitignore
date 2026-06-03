@@ -46,3 +46,5 @@ next-env.d.ts
 /page-*.png
 /page-*.jpeg
 /file-preview.png
+/phase*.png
+/edit-bug-*.png

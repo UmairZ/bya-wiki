@@ -69,8 +69,8 @@ export default async function PageView({ params }: Props) {
     <div className="mx-auto flex w-full max-w-6xl gap-0 px-4 py-6 md:px-8 md:py-10">
       <article className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
-            Home
+          <Link href="/resources" className="hover:text-foreground">
+            Resources
           </Link>
           {category && (
             <>

@@ -114,7 +114,7 @@ export async function createEventAction(
 
   updateTag("calendar");
   revalidatePath("/events");
-  revalidatePath("/");
+  revalidatePath("/resources");
   return { ok: true };
 }
 
@@ -145,7 +145,7 @@ export async function updateEventAction(
 
   updateTag("calendar");
   revalidatePath("/events");
-  revalidatePath("/");
+  revalidatePath("/resources");
   return { ok: true };
 }
 
@@ -171,7 +171,7 @@ export async function deleteEventAction(
 
   updateTag("calendar");
   revalidatePath("/events");
-  revalidatePath("/");
+  revalidatePath("/resources");
   return { ok: true };
 }
 
