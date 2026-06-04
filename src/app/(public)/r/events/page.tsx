@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+// eslint-disable-next-line @next/next/no-img-element -- intentional: the
+// lockup logo is small + cached + we want unconstrained aspect ratio
 import { APP_NAME, LOGO_LOCKUP_SRC } from "@/lib/brand";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
@@ -103,13 +105,13 @@ export default async function PublicEventsPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:py-10">
       <header className="flex flex-col items-center gap-3">
-        <Image
+        {/* Plain img — Next/Image's required width+height + the lockup's
+            unknown aspect ratio fight each other in dev warnings, and the
+            optimization win on a small static org logo is nil. */}
+        <img
           src={LOGO_LOCKUP_SRC}
           alt={`${APP_NAME} logo`}
-          width={240}
-          height={80}
-          priority
-          className="h-auto w-auto max-h-20"
+          className="h-20 w-auto"
         />
         <h1 className="sr-only">Upcoming events — {APP_NAME}</h1>
       </header>

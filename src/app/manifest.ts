@@ -13,9 +13,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#006738",
     icons: [
       {
-        src: "/icon.svg",
+        src: "/bilalmasjid_icon_no_background.png",
         sizes: "any",
-        type: "image/svg+xml",
+        type: "image/png",
         purpose: "any",
       },
       {
