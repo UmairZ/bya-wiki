@@ -52,15 +52,6 @@ export function EventFlyerEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Flyer
-        </label>
-        <span className="text-[10px] text-muted-foreground/70">
-          Appears on the public /r/events grid
-        </span>
-      </div>
-
       <input
         ref={inputRef}
         type="file"

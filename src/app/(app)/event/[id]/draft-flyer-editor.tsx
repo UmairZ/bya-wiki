@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
-import { AlertTriangle, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,27 +43,8 @@ export function DraftFlyerEditor({
     });
   }
 
-  const missing = !flyerStoragePath;
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <label
-          className={cn(
-            "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider",
-            missing ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
-          )}
-        >
-          {missing && (
-            <AlertTriangle className="size-3.5" aria-hidden />
-          )}
-          Flyer
-          <span className="ml-0.5 text-destructive">*</span>
-        </label>
-        <span className="text-[10px] text-muted-foreground/70">
-          1:1 square looks best · ≤ 5 MB
-        </span>
-      </div>
-
       <input
         ref={inputRef}
         type="file"
@@ -127,10 +108,12 @@ export function DraftFlyerEditor({
           }}
           disabled={pending}
           className={cn(
-            "flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 text-center transition-colors",
+            // Amber dropzone preserves the "required field" signal that
+            // used to live on the (now-removed) FLYER label.
+            "flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-amber-500/10 text-center transition-colors",
             dragOver
               ? "border-primary bg-brand-tint/40 text-primary"
-              : "border-muted-foreground/30 text-muted-foreground hover:border-primary/40 hover:bg-brand-tint/20 hover:text-foreground",
+              : "border-amber-500/50 text-amber-700 hover:border-primary/40 hover:bg-brand-tint/20 hover:text-foreground dark:text-amber-400",
             pending && "opacity-60",
           )}
         >
@@ -140,7 +123,7 @@ export function DraftFlyerEditor({
             <ImagePlus className="size-6" aria-hidden />
           )}
           <span className="text-xs font-medium">
-            {pending ? "Uploading…" : "Click or drop a flyer"}
+            {pending ? "Uploading…" : "Add a flyer (required to publish)"}
           </span>
         </button>
       )}
