@@ -252,6 +252,8 @@ export type EventPayload = {
   location?: string;
   registration_url?: string;
   tags?: string[];
+  audience?: import("@/lib/supabase/types").AudienceTag | null;
+  gender?: import("@/lib/supabase/types").GenderTag | null;
   starts_at: string; // ISO
   ends_at: string | null;
   all_day: boolean;
@@ -312,6 +314,8 @@ function buildGoogleEventBody(payload: EventPayload) {
     description: payload.description,
     registration_url: payload.registration_url,
     tags: payload.tags,
+    audience: payload.audience,
+    gender: payload.gender,
   });
 
   const body: Record<string, unknown> = {

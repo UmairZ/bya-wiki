@@ -359,7 +359,12 @@ export type PlaybookTemplateTaskUpdate = {
 // workflows
 // ---------------------------------------------------------------------------
 
-export type TargetKind = "event" | "page" | "space" | "standalone";
+export type TargetKind =
+  | "event"
+  | "page"
+  | "space"
+  | "standalone"
+  | "draft";
 
 export type WorkflowRow = {
   id: string;
@@ -389,6 +394,8 @@ export type WorkflowUpdate = {
   name?: string;
   starts_at?: string | null;
   archived?: boolean;
+  target_kind?: TargetKind;
+  target_ref?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -407,6 +414,7 @@ export type TaskRow = {
   status: TaskStatus;
   assigned_to: string | null;
   due_at: string | null;
+  default_offset_days: number | null;
   completed_at: string | null;
   completed_by: string | null;
   created_at: string;
@@ -423,6 +431,7 @@ export type TaskInsert = {
   status?: TaskStatus;
   assigned_to?: string | null;
   due_at?: string | null;
+  default_offset_days?: number | null;
 };
 
 export type TaskUpdate = {
@@ -433,6 +442,78 @@ export type TaskUpdate = {
   status?: TaskStatus;
   assigned_to?: string | null;
   due_at?: string | null;
+  default_offset_days?: number | null;
+};
+
+// ---------------------------------------------------------------------------
+// draft_events (Phase 7e)
+// ---------------------------------------------------------------------------
+
+export type AudienceTag =
+  | "Kids"
+  | "Jr. Youth"
+  | "Youth"
+  | "Young Professionals"
+  | "Family";
+
+export type GenderTag = "Girls" | "Boys" | "Both";
+
+export const AUDIENCE_VALUES: AudienceTag[] = [
+  "Kids",
+  "Jr. Youth",
+  "Youth",
+  "Young Professionals",
+  "Family",
+];
+
+export const GENDER_VALUES: GenderTag[] = ["Girls", "Boys", "Both"];
+
+export type DraftEventRow = {
+  id: string;
+  title: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  all_day: boolean;
+  location: string | null;
+  description: string;
+  registration_url: string | null;
+  audience: AudienceTag | null;
+  gender: GenderTag | null;
+  free_tags: string[];
+  archived: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DraftEventInsert = {
+  id?: string;
+  title: string;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  all_day?: boolean;
+  location?: string | null;
+  description?: string;
+  registration_url?: string | null;
+  audience?: AudienceTag | null;
+  gender?: GenderTag | null;
+  free_tags?: string[];
+  archived?: boolean;
+  created_by?: string | null;
+};
+
+export type DraftEventUpdate = {
+  title?: string;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  all_day?: boolean;
+  location?: string | null;
+  description?: string;
+  registration_url?: string | null;
+  audience?: AudienceTag | null;
+  gender?: GenderTag | null;
+  free_tags?: string[];
+  archived?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -518,6 +599,12 @@ export type Database = {
         Row: TaskRow;
         Insert: TaskInsert;
         Update: TaskUpdate;
+        Relationships: [];
+      };
+      draft_events: {
+        Row: DraftEventRow;
+        Insert: DraftEventInsert;
+        Update: DraftEventUpdate;
         Relationships: [];
       };
     };

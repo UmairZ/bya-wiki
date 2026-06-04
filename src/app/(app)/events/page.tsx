@@ -7,11 +7,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { getConnectionStatus } from "@/lib/calendar/google";
 import type { CalendarEvent } from "@/lib/calendar/types";
-import type { EventStageRow } from "@/lib/supabase/types";
+import type { DraftEventRow, EventStageRow } from "@/lib/supabase/types";
 import { EventsKanban, type Stage } from "./events-kanban";
 import { PastEventsSection } from "./past-events-section";
 import { NewEventButton } from "./new-event-button";
-import { enrichEvents, splitForEventsPage } from "./workflow-state";
+import {
+  enrichDrafts,
+  enrichEvents,
+  splitForEventsPage,
+} from "./workflow-state";
 
 export const metadata = { title: "Events" };
 
@@ -27,7 +31,7 @@ async function loadStages(): Promise<Stage[]> {
 }
 
 async function loadWorkflowsAndTasks(): Promise<{
-  workflows: { id: string; target_ref: string }[];
+  workflows: { id: string; target_ref: string; target_kind: string }[];
   tasks: {
     workflow_id: string;
     event_stage_id: string;
@@ -39,8 +43,8 @@ async function loadWorkflowsAndTasks(): Promise<{
   const supabase = await createSupabaseServerClient();
   const { data: workflows, error: wErr } = await supabase
     .from("workflows")
-    .select("id, target_ref")
-    .eq("target_kind", "event")
+    .select("id, target_ref, target_kind")
+    .in("target_kind", ["event", "draft"])
     .eq("archived", false);
   if (wErr || !workflows || workflows.length === 0) {
     return { workflows: workflows ?? [], tasks: [] };
@@ -54,14 +58,27 @@ async function loadWorkflowsAndTasks(): Promise<{
   return { workflows, tasks: tasks ?? [] };
 }
 
+async function loadActiveDrafts(): Promise<DraftEventRow[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("draft_events")
+    .select("*")
+    .eq("archived", false)
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as DraftEventRow[];
+}
+
 export default async function EventsPage() {
-  const [current, icsUrl, googleStatus, stages, wfState] = await Promise.all([
-    getCurrentUser(),
-    getIcsUrl(),
-    getConnectionStatus(),
-    loadStages(),
-    loadWorkflowsAndTasks(),
-  ]);
+  const [current, icsUrl, googleStatus, stages, wfState, drafts] =
+    await Promise.all([
+      getCurrentUser(),
+      getIcsUrl(),
+      getConnectionStatus(),
+      loadStages(),
+      loadWorkflowsAndTasks(),
+      loadActiveDrafts(),
+    ]);
   const isOwner = current?.profile.role === "owner";
   const canWrite =
     Boolean(current) && googleStatus.connected && Boolean(googleStatus.calendarId);
@@ -116,10 +133,11 @@ export default async function EventsPage() {
 
   const enriched = enrichEvents(
     events,
-    wfState.workflows,
+    wfState.workflows.filter((w) => w.target_kind === "event"),
     wfState.tasks,
     fullStages,
   );
+  const enrichedDrafts = enrichDrafts(drafts, wfState.workflows, wfState.tasks);
   const { kanban, past } = splitForEventsPage(enriched);
 
   return (
@@ -193,7 +211,11 @@ export default async function EventsPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Upcoming &amp; in progress
         </h2>
-        <EventsKanban stages={stages} upcoming={kanban} />
+        <EventsKanban
+          stages={stages}
+          upcoming={kanban}
+          drafts={enrichedDrafts}
+        />
       </section>
 
       <PastEventsSection events={past} />

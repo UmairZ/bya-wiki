@@ -48,6 +48,14 @@ function readForm(formData: FormData):
   const registration_url =
     String(formData.get("registration_url") ?? "").trim() || undefined;
   const tags = parseTags(String(formData.get("tags") ?? ""));
+  const audienceRaw = String(formData.get("audience") ?? "").trim();
+  const genderRaw = String(formData.get("gender") ?? "").trim();
+  const audience = audienceRaw
+    ? (audienceRaw as import("@/lib/supabase/types").AudienceTag)
+    : null;
+  const gender = genderRaw
+    ? (genderRaw as import("@/lib/supabase/types").GenderTag)
+    : null;
   const allDay = formData.get("all_day") === "on";
 
   let starts_at: string | null = null;
@@ -83,6 +91,8 @@ function readForm(formData: FormData):
       location,
       registration_url,
       tags,
+      audience,
+      gender,
       starts_at,
       ends_at,
       all_day: allDay,

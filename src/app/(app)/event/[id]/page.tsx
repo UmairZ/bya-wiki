@@ -1,24 +1,21 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  CalendarDays,
   ChevronLeft,
   ExternalLink,
-  MapPin,
   Sparkles,
-  Ticket,
 } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
 import { getConnectionStatus } from "@/lib/calendar/google";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { formatEventWhen } from "@/lib/date-time";
 import { encodeEventHref } from "@/lib/calendar/event-href";
 import type {
   CalendarEvent,
 } from "@/lib/calendar/types";
 import type {
+  DraftEventRow,
   EventStageRow,
   TaskRow,
   WorkflowRow,
@@ -30,6 +27,12 @@ import {
   type TemplateOption,
 } from "./apply-playbook-picker";
 import { WorkflowHeader } from "./workflow-header";
+import { MetadataGrid } from "./metadata-block";
+import { CopyField } from "./copy-field";
+import { DraftView } from "./draft-view";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function loadStages(): Promise<EventStageRow[]> {
   const supabase = await createSupabaseServerClient();
@@ -42,7 +45,20 @@ async function loadStages(): Promise<EventStageRow[]> {
   return data ?? [];
 }
 
-async function loadWorkflowAndTasks(eventId: string): Promise<{
+async function loadDraft(draftId: string): Promise<DraftEventRow | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("draft_events")
+    .select("*")
+    .eq("id", draftId)
+    .maybeSingle();
+  return (data as DraftEventRow | null) ?? null;
+}
+
+async function loadWorkflowAndTasks(
+  targetRef: string,
+  targetKind: "event" | "draft",
+): Promise<{
   workflow: WorkflowRow | null;
   tasks: TaskRow[];
 }> {
@@ -52,8 +68,8 @@ async function loadWorkflowAndTasks(eventId: string): Promise<{
     .select(
       "id, template_id, name, target_kind, target_ref, starts_at, archived, created_by, created_at, updated_at",
     )
-    .eq("target_kind", "event")
-    .eq("target_ref", eventId)
+    .eq("target_kind", targetKind)
+    .eq("target_ref", targetRef)
     .eq("archived", false)
     .maybeSingle();
 
@@ -62,7 +78,7 @@ async function loadWorkflowAndTasks(eventId: string): Promise<{
   const { data: tasks } = await supabase
     .from("tasks")
     .select(
-      "id, workflow_id, event_stage_id, title, description, sort_order, status, assigned_to, due_at, completed_at, completed_by, created_at, updated_at",
+      "id, workflow_id, event_stage_id, title, description, sort_order, status, assigned_to, due_at, default_offset_days, completed_at, completed_by, created_at, updated_at",
     )
     .eq("workflow_id", workflow.id)
     .order("sort_order", { ascending: true });
@@ -115,6 +131,33 @@ export default async function EventDetailPage({
   const { id: rawId } = await params;
   const eventId = decodeURIComponent(rawId);
 
+  // 1) If it looks like a UUID, try draft lookup first. Drafts live in our DB
+  //    and never have @google.com in their id.
+  if (UUID_RE.test(eventId)) {
+    const [draft, stages, members, templates] = await Promise.all([
+      loadDraft(eventId),
+      loadStages(),
+      loadActiveMembers(),
+      loadActiveTemplates(),
+    ]);
+    if (draft) {
+      const { workflow, tasks } = await loadWorkflowAndTasks(eventId, "draft");
+      return (
+        <DraftView
+          draft={draft}
+          workflow={workflow}
+          tasks={tasks}
+          stages={stages}
+          members={members}
+          templates={templates}
+        />
+      );
+    }
+    // UUID but no draft found — fall through to event lookup just in case (some
+    // future provider might give UUID-shaped event ids). Most cases → 404.
+  }
+
+  // 2) Published event flow.
   const [
     icsUrl,
     googleStatus,
@@ -128,7 +171,7 @@ export default async function EventDetailPage({
     getConnectionStatus(),
     getCurrentUser(),
     loadStages(),
-    loadWorkflowAndTasks(eventId),
+    loadWorkflowAndTasks(eventId, "event"),
     loadActiveTemplates(),
     loadActiveMembers(),
   ]);
@@ -157,7 +200,6 @@ export default async function EventDetailPage({
       (e) => e.id.split("::")[0] === baseUidFromUrl,
     );
     if (candidates.length > 0) {
-      // Prefer the instance closest in time to whatever was in the URL.
       const urlIsoPart = eventId.split("::")[1];
       const urlMs = urlIsoPart ? new Date(urlIsoPart).getTime() : NaN;
       const best = Number.isFinite(urlMs)
@@ -208,30 +250,6 @@ export default async function EventDetailPage({
             <h1 className="text-2xl font-semibold tracking-tight">
               {event.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <CalendarDays className="size-4" aria-hidden />
-                {formatEventWhen(event)}
-              </span>
-              {event.location && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="size-4" aria-hidden />
-                  {event.location}
-                </span>
-              )}
-            </div>
-            {parsed.tags.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5">
-                {parsed.tags.map((tag) => (
-                  <li
-                    key={tag}
-                    className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
-                  >
-                    {tag}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
           <EventDetailActions
             canWrite={canWrite}
@@ -243,6 +261,8 @@ export default async function EventDetailPage({
               location: event.location ?? "",
               registration_url: parsed.registration_url ?? "",
               tags: parsed.tags,
+              audience: parsed.audience,
+              gender: parsed.gender,
               starts_at: event.starts_at,
               ends_at: event.ends_at,
               all_day: event.all_day,
@@ -250,17 +270,27 @@ export default async function EventDetailPage({
           />
         </div>
 
+        <div className="rounded-lg border bg-card p-3">
+          <MetadataGrid
+            values={{
+              starts_at: event.starts_at,
+              ends_at: event.ends_at,
+              all_day: event.all_day,
+              location: event.location,
+              audience: parsed.audience,
+              gender: parsed.gender,
+              free_tags: parsed.tags,
+            }}
+          />
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           {parsed.registration_url && (
-            <a
+            <CopyField
+              label="Register"
+              value={parsed.registration_url}
               href={parsed.registration_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-[var(--brand-hover)]"
-            >
-              <Ticket className="size-4" aria-hidden />
-              Register
-            </a>
+            />
           )}
           {event.html_link && (
             <a

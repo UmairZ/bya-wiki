@@ -1,5 +1,5 @@
 import type { CalendarEvent } from "@/lib/calendar/types";
-import type { EventStageRow } from "@/lib/supabase/types";
+import type { DraftEventRow, EventStageRow } from "@/lib/supabase/types";
 
 export type EnrichedEvent = {
   event: CalendarEvent;
@@ -150,4 +150,67 @@ export function splitForEventsPage(
     }
   }
   return { kanban, past };
+}
+
+// ---------------------------------------------------------------------------
+// Drafts (Phase 7e)
+// ---------------------------------------------------------------------------
+
+export type EnrichedDraft = {
+  draft: DraftEventRow;
+  workflowId: string | null;
+  taskCount: number;
+  doneCount: number;
+  overdueCount: number;
+};
+
+export function enrichDrafts(
+  drafts: DraftEventRow[],
+  workflows: { id: string; target_ref: string; target_kind: string }[],
+  tasks: RawTask[],
+): EnrichedDraft[] {
+  const byTargetRef = new Map<string, { id: string }>();
+  for (const w of workflows) {
+    if (w.target_kind === "draft") byTargetRef.set(w.target_ref, w);
+  }
+
+  const tasksByWorkflow = new Map<string, RawTask[]>();
+  for (const t of tasks) {
+    if (!tasksByWorkflow.has(t.workflow_id)) {
+      tasksByWorkflow.set(t.workflow_id, []);
+    }
+    tasksByWorkflow.get(t.workflow_id)!.push(t);
+  }
+
+  const now = Date.now();
+
+  return drafts.map((draft) => {
+    const wf = byTargetRef.get(draft.id);
+    if (!wf) {
+      return {
+        draft,
+        workflowId: null,
+        taskCount: 0,
+        doneCount: 0,
+        overdueCount: 0,
+      };
+    }
+    const list = tasksByWorkflow.get(wf.id) ?? [];
+    const doneCount = list.filter(
+      (t) => t.status === "done" || t.status === "skipped",
+    ).length;
+    const overdueCount = list.filter(
+      (t) =>
+        (t.status === "todo" || t.status === "in_progress") &&
+        t.due_at !== null &&
+        new Date(t.due_at).getTime() < now,
+    ).length;
+    return {
+      draft,
+      workflowId: wf.id,
+      taskCount: list.length,
+      doneCount,
+      overdueCount,
+    };
+  });
 }

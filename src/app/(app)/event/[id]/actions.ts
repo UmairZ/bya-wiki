@@ -33,17 +33,18 @@ const revalidateEvent = revalidateEventAndKanban;
 export async function applyPlaybookAction(
   templateId: string,
   eventId: string,
-  eventStartsAt: string,
+  eventStartsAt: string | null,
   eventTitle: string,
+  targetKind: "event" | "draft" = "event",
 ): Promise<ActionResult> {
   const { profile } = await requireCurrentUser();
   const supabase = await createSupabaseServerClient();
 
-  // 1) Reject if a non-archived workflow already exists for this event.
+  // 1) Reject if a non-archived workflow already exists for this target.
   const { data: existing } = await supabase
     .from("workflows")
     .select("id")
-    .eq("target_kind", "event")
+    .eq("target_kind", targetKind)
     .eq("target_ref", eventId)
     .eq("archived", false)
     .maybeSingle();
@@ -82,7 +83,7 @@ export async function applyPlaybookAction(
     .insert({
       template_id: templateId,
       name: `${templateResp.data.name} — ${eventTitle}`,
-      target_kind: "event",
+      target_kind: targetKind,
       target_ref: eventId,
       starts_at: eventStartsAt,
       created_by: profile.id,
@@ -96,11 +97,13 @@ export async function applyPlaybookAction(
     };
   }
 
-  // 4) Insert tasks with due_at derived from default_offset_days.
-  const startsAtMs = new Date(eventStartsAt).getTime();
+  // 4) Insert tasks with due_at derived from default_offset_days (when the
+  // event has a start). Carry default_offset_days through so drafts that get
+  // a date set later can backfill due_at via updateDraftAction.
+  const startsAtMs = eventStartsAt ? new Date(eventStartsAt).getTime() : null;
   const toInsert: TaskInsert[] = (tasksResp.data ?? []).map((t) => {
     let due: string | null = null;
-    if (t.default_offset_days !== null) {
+    if (startsAtMs !== null && t.default_offset_days !== null) {
       const due_ms = startsAtMs + t.default_offset_days * 24 * 60 * 60 * 1000;
       due = new Date(due_ms).toISOString();
     }
@@ -111,6 +114,7 @@ export async function applyPlaybookAction(
       description: t.description,
       sort_order: t.sort_order,
       due_at: due,
+      default_offset_days: t.default_offset_days,
     };
   });
 

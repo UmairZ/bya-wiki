@@ -22,6 +22,12 @@ import {
   updateEventAction,
   type EventActionState,
 } from "./actions";
+import {
+  AUDIENCE_VALUES,
+  GENDER_VALUES,
+  type AudienceTag,
+  type GenderTag,
+} from "@/lib/supabase/types";
 
 export type EditableEvent = {
   eventId: string;
@@ -30,6 +36,8 @@ export type EditableEvent = {
   location: string;
   registration_url: string;
   tags: string[];
+  audience: AudienceTag | null;
+  gender: GenderTag | null;
   starts_at: string;
   ends_at: string | null;
   all_day: boolean;
@@ -179,6 +187,41 @@ export function EventDialog({
             <p className="text-xs text-muted-foreground">
               Shows as a Register button on the event.
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ev-audience">Audience</Label>
+              <select
+                id="ev-audience"
+                name="audience"
+                defaultValue={event?.audience ?? ""}
+                className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+              >
+                <option value="">—</option>
+                {AUDIENCE_VALUES.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ev-gender">Gender</Label>
+              <select
+                id="ev-gender"
+                name="gender"
+                defaultValue={event?.gender ?? ""}
+                className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+              >
+                <option value="">—</option>
+                {GENDER_VALUES.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
