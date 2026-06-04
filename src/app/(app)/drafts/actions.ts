@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -8,7 +8,6 @@ import {
   createEvent,
   getConnectionStatus,
 } from "@/lib/calendar/google";
-import { updateTag } from "next/cache";
 import type {
   AudienceTag,
   DraftEventRow,
@@ -64,7 +63,6 @@ export async function updateDraftAction(
   await requireCurrentUser();
   const supabase = await createSupabaseServerClient();
 
-  // Strip undefined keys so we only update what was explicitly set.
   const clean: DraftEventUpdate = {};
   for (const key of Object.keys(fields) as UpdatableField[]) {
     if (fields[key] !== undefined) {
@@ -73,7 +71,6 @@ export async function updateDraftAction(
   }
   if (Object.keys(clean).length === 0) return { ok: true, data: null };
 
-  // Sniff if starts_at is changing — we'll backfill task due_at after.
   const startsAtIsChanging = "starts_at" in clean;
 
   const { data: updated, error } = await supabase
@@ -94,37 +91,30 @@ export async function updateDraftAction(
   return { ok: true, data: null };
 }
 
-/** When a draft's starts_at gets set or changed, recompute due_at across all
- *  tasks in its attached workflow using their default_offset_days. Tasks with
- *  no default_offset_days are left alone (user-customized). */
+/** When a draft's starts_at changes, recompute due_at across all tasks that
+ *  were copied from a template (default_offset_days set). Tasks added
+ *  ad-hoc (no offset) are left alone. */
 async function backfillTaskDueDates(
   draftId: string,
   newStartsAt: string | null,
 ): Promise<void> {
   const supabase = await createSupabaseServerClient();
 
-  const { data: workflow } = await supabase
-    .from("workflows")
-    .select("id")
-    .eq("target_kind", "draft")
-    .eq("target_ref", draftId)
-    .eq("archived", false)
-    .maybeSingle();
-  if (!workflow) return;
-
   if (newStartsAt === null) {
-    // Date cleared — null out due_at for all tasks in the workflow.
     await supabase
       .from("tasks")
       .update({ due_at: null })
-      .eq("workflow_id", workflow.id);
+      .eq("target_kind", "draft")
+      .eq("target_ref", draftId)
+      .not("default_offset_days", "is", null);
     return;
   }
 
   const { data: tasks } = await supabase
     .from("tasks")
     .select("id, default_offset_days")
-    .eq("workflow_id", workflow.id)
+    .eq("target_kind", "draft")
+    .eq("target_ref", draftId)
     .not("default_offset_days", "is", null);
   if (!tasks || tasks.length === 0) return;
 
@@ -133,8 +123,10 @@ async function backfillTaskDueDates(
   for (const t of tasks) {
     if (t.default_offset_days === null) continue;
     const dueMs = startsAtMs + t.default_offset_days * 24 * 60 * 60 * 1000;
-    const due = new Date(dueMs).toISOString();
-    await supabase.from("tasks").update({ due_at: due }).eq("id", t.id);
+    await supabase
+      .from("tasks")
+      .update({ due_at: new Date(dueMs).toISOString() })
+      .eq("id", t.id);
   }
 }
 
@@ -148,10 +140,10 @@ export async function deleteDraftAction(
   await requireCurrentUser();
   const supabase = await createSupabaseServerClient();
 
-  // Archive the attached workflow first (don't orphan).
+  // Tasks attached to this draft are owned by it — cascade-delete them.
   await supabase
-    .from("workflows")
-    .update({ archived: true })
+    .from("tasks")
+    .delete()
     .eq("target_kind", "draft")
     .eq("target_ref", draftId);
 
@@ -234,18 +226,18 @@ export async function publishDraftAction(
     };
   }
 
-  // Google's event UID for ICS feed is `<id>@google.com`. We store that in
-  // workflows.target_ref so the workflow page lookup matches.
   const googleEventUid = `${created.id}@google.com`;
 
-  // Swap any workflow attached to the draft over to the new Google event.
+  // Transfer any tasks pointed at the draft over to the Google event UID.
+  // Includes Drafts-stage tasks and any post-pub tasks that were already
+  // added (rare since playbook-on-drafts is now disabled, but safe).
   await supabase
-    .from("workflows")
+    .from("tasks")
     .update({ target_kind: "event", target_ref: googleEventUid })
     .eq("target_kind", "draft")
     .eq("target_ref", draftId);
 
-  // Delete the draft — it's now superseded by the Google event.
+  // Hard-delete the draft — it's now superseded by the Google event.
   await supabase.from("draft_events").delete().eq("id", draftId);
 
   // Bust the ICS cache so the new event appears immediately on /events.
@@ -266,7 +258,6 @@ export async function publishAndRedirectAction(
 ): Promise<void> {
   const result = await publishDraftAction(draftId);
   if (!result.ok) {
-    // Encode the error in the URL for the client to surface.
     redirect(
       `/event/${encodeURIComponent(draftId)}?publish_error=${encodeURIComponent(result.error)}`,
     );

@@ -356,7 +356,8 @@ export type PlaybookTemplateTaskUpdate = {
 };
 
 // ---------------------------------------------------------------------------
-// workflows
+// TargetKind — used by tasks (and previously workflows, now dropped) to point
+// at the thing they're attached to.
 // ---------------------------------------------------------------------------
 
 export type TargetKind =
@@ -366,38 +367,6 @@ export type TargetKind =
   | "standalone"
   | "draft";
 
-export type WorkflowRow = {
-  id: string;
-  template_id: string | null;
-  name: string;
-  target_kind: TargetKind;
-  target_ref: string;
-  starts_at: string | null;
-  archived: boolean;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type WorkflowInsert = {
-  id?: string;
-  template_id?: string | null;
-  name: string;
-  target_kind?: TargetKind;
-  target_ref: string;
-  starts_at?: string | null;
-  archived?: boolean;
-  created_by?: string | null;
-};
-
-export type WorkflowUpdate = {
-  name?: string;
-  starts_at?: string | null;
-  archived?: boolean;
-  target_kind?: TargetKind;
-  target_ref?: string;
-};
-
 // ---------------------------------------------------------------------------
 // tasks
 // ---------------------------------------------------------------------------
@@ -406,7 +375,8 @@ export type TaskStatus = "todo" | "in_progress" | "done" | "skipped";
 
 export type TaskRow = {
   id: string;
-  workflow_id: string;
+  target_kind: TargetKind;
+  target_ref: string;
   event_stage_id: string;
   title: string;
   description: string;
@@ -415,6 +385,7 @@ export type TaskRow = {
   assigned_to: string | null;
   due_at: string | null;
   default_offset_days: number | null;
+  source_template_id: string | null;
   completed_at: string | null;
   completed_by: string | null;
   created_at: string;
@@ -423,7 +394,8 @@ export type TaskRow = {
 
 export type TaskInsert = {
   id?: string;
-  workflow_id: string;
+  target_kind: TargetKind;
+  target_ref: string;
   event_stage_id: string;
   title: string;
   description?: string;
@@ -432,9 +404,12 @@ export type TaskInsert = {
   assigned_to?: string | null;
   due_at?: string | null;
   default_offset_days?: number | null;
+  source_template_id?: string | null;
 };
 
 export type TaskUpdate = {
+  target_kind?: TargetKind;
+  target_ref?: string;
   event_stage_id?: string;
   title?: string;
   description?: string;
@@ -587,12 +562,6 @@ export type Database = {
         Row: PlaybookTemplateTaskRow;
         Insert: PlaybookTemplateTaskInsert;
         Update: PlaybookTemplateTaskUpdate;
-        Relationships: [];
-      };
-      workflows: {
-        Row: WorkflowRow;
-        Insert: WorkflowInsert;
-        Update: WorkflowUpdate;
         Relationships: [];
       };
       tasks: {

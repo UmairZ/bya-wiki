@@ -30,32 +30,23 @@ async function loadStages(): Promise<Stage[]> {
   return data ?? [];
 }
 
-async function loadWorkflowsAndTasks(): Promise<{
-  workflows: { id: string; target_ref: string; target_kind: string }[];
-  tasks: {
-    workflow_id: string;
+async function loadAllTasks(): Promise<
+  {
+    target_kind: string;
+    target_ref: string;
     event_stage_id: string;
     status: string;
     completed_at: string | null;
     due_at: string | null;
-  }[];
-}> {
+  }[]
+> {
   const supabase = await createSupabaseServerClient();
-  const { data: workflows, error: wErr } = await supabase
-    .from("workflows")
-    .select("id, target_ref, target_kind")
-    .in("target_kind", ["event", "draft"])
-    .eq("archived", false);
-  if (wErr || !workflows || workflows.length === 0) {
-    return { workflows: workflows ?? [], tasks: [] };
-  }
-  const ids = workflows.map((w) => w.id);
-  const { data: tasks, error: tErr } = await supabase
+  const { data, error } = await supabase
     .from("tasks")
-    .select("workflow_id, event_stage_id, status, completed_at, due_at")
-    .in("workflow_id", ids);
-  if (tErr) return { workflows, tasks: [] };
-  return { workflows, tasks: tasks ?? [] };
+    .select("target_kind, target_ref, event_stage_id, status, completed_at, due_at")
+    .in("target_kind", ["event", "draft"]);
+  if (error) return [];
+  return data ?? [];
 }
 
 async function loadActiveDrafts(): Promise<DraftEventRow[]> {
@@ -70,13 +61,13 @@ async function loadActiveDrafts(): Promise<DraftEventRow[]> {
 }
 
 export default async function EventsPage() {
-  const [current, icsUrl, googleStatus, stages, wfState, drafts] =
+  const [current, icsUrl, googleStatus, stages, allTasks, drafts] =
     await Promise.all([
       getCurrentUser(),
       getIcsUrl(),
       getConnectionStatus(),
       loadStages(),
-      loadWorkflowsAndTasks(),
+      loadAllTasks(),
       loadActiveDrafts(),
     ]);
   const isOwner = current?.profile.role === "owner";
@@ -131,13 +122,8 @@ export default async function EventsPage() {
     updated_at: "",
   }));
 
-  const enriched = enrichEvents(
-    events,
-    wfState.workflows.filter((w) => w.target_kind === "event"),
-    wfState.tasks,
-    fullStages,
-  );
-  const enrichedDrafts = enrichDrafts(drafts, wfState.workflows, wfState.tasks);
+  const enriched = enrichEvents(events, allTasks, fullStages);
+  const enrichedDrafts = enrichDrafts(drafts, allTasks);
   const { kanban, past } = splitForEventsPage(enriched);
 
   return (

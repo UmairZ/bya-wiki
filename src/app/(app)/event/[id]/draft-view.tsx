@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   MoreHorizontal,
   Send,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,30 +28,22 @@ import type {
   DraftEventRow,
   EventStageRow,
   TaskRow,
-  WorkflowRow,
 } from "@/lib/supabase/types";
 import { DraftFieldsEditor } from "./draft-fields-editor";
-import { TaskKanban, type MemberSummary } from "./task-kanban";
-import {
-  ApplyPlaybookPicker,
-  type TemplateOption,
-} from "./apply-playbook-picker";
-import { WorkflowHeader } from "./workflow-header";
+import { DraftTaskList } from "./draft-task-list";
+import { TaskSectionHeader } from "./task-section-header";
+import type { MemberSummary } from "./task-card";
 
 export function DraftView({
   draft,
-  workflow,
   tasks,
   stages,
   members,
-  templates,
 }: {
   draft: DraftEventRow;
-  workflow: WorkflowRow | null;
   tasks: TaskRow[];
   stages: EventStageRow[];
   members: MemberSummary[];
-  templates: TemplateOption[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -91,7 +82,7 @@ export function DraftView({
   function handleDelete() {
     if (
       !window.confirm(
-        `Delete draft "${draft.title}"? Any attached workflow will be archived. This can't be undone.`,
+        `Delete draft "${draft.title}"? All tasks attached to it will also be deleted. This can't be undone.`,
       )
     ) {
       return;
@@ -114,10 +105,12 @@ export function DraftView({
   if (!draft.gender) missing.push("gender");
   const canPublish = missing.length === 0;
 
-  const allTasksDone =
-    workflow !== null &&
-    tasks.length > 0 &&
-    tasks.every((t) => t.status === "done" || t.status === "skipped");
+  // Drafts only ever have Drafts-stage tasks (the first stage). Fall back
+  // to the first stage by sort_order if no tasks exist yet.
+  const draftsStage = stages[0];
+  const doneCount = tasks.filter(
+    (t) => t.status === "done" || t.status === "skipped",
+  ).length;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
@@ -222,64 +215,28 @@ export function DraftView({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Tasks
           </h2>
-          {workflow && (
-            <ApplyPlaybookPicker
-              templates={templates}
-              eventId={draft.id}
-              eventStartsAt={draft.starts_at ?? ""}
-              eventTitle={draft.title}
-              targetKind="draft"
-              trigger="button"
-            />
-          )}
+          <span className="text-xs text-muted-foreground/70">
+            Playbooks apply after publishing.
+          </span>
         </div>
 
-        {workflow ? (
-          <>
-            <WorkflowHeader
-              workflow={workflow}
-              eventId={draft.id}
-              taskCount={tasks.length}
-              doneCount={
-                tasks.filter(
-                  (t) => t.status === "done" || t.status === "skipped",
-                ).length
-              }
-              allDone={allTasksDone}
-            />
-            {tasks.length === 0 && (
-              <div className="rounded-lg border border-dashed bg-card/40 px-6 py-8 text-center text-sm text-muted-foreground">
-                Workflow has no tasks yet — add one to each stage below.
-              </div>
-            )}
-            <TaskKanban
-              workflowId={workflow.id}
-              eventId={draft.id}
-              tasks={tasks}
-              stages={stages}
-              members={members}
-            />
-          </>
+        <TaskSectionHeader
+          taskCount={tasks.length}
+          doneCount={doneCount}
+          appliedTemplateNames={[]}
+        />
+
+        {draftsStage ? (
+          <DraftTaskList
+            draftId={draft.id}
+            draftsStage={draftsStage}
+            allStages={stages}
+            tasks={tasks}
+            members={members}
+          />
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card/40 px-6 py-12 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-brand-tint text-brand-tint-foreground">
-              <Sparkles className="size-6" aria-hidden />
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">No playbook applied yet</p>
-              <p className="text-xs text-muted-foreground">
-                Pick a playbook to load a starter checklist. Due dates fill in
-                once this draft has a date.
-              </p>
-            </div>
-            <ApplyPlaybookPicker
-              templates={templates}
-              eventId={draft.id}
-              eventStartsAt={draft.starts_at ?? ""}
-              eventTitle={draft.title}
-              targetKind="draft"
-              trigger="empty-state"
-            />
+          <div className="rounded-lg border border-dashed bg-card/40 px-6 py-8 text-center text-sm text-muted-foreground">
+            No event stages configured yet.
           </div>
         )}
       </section>

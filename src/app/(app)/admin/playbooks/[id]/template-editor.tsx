@@ -191,15 +191,18 @@ export function TemplateEditor({
         </div>
       </header>
 
-      <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-4">
-        {stages.map((stage) => {
+      {/* Skip the first stage (Drafts) — playbooks only populate the 3
+          post-publish stages. Drafts-stage tasks are ad-hoc on a per-event
+          basis, not part of any template. */}
+      <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {stages.slice(1).map((stage) => {
           const list = tasksByStage.get(stage.id) ?? [];
           return (
             <StageColumn
               key={stage.id}
               stage={stage}
               tasks={list}
-              allStages={stages}
+              allStages={stages.slice(1)}
               templateId={template.id}
               pending={pending}
               startTransition={startTransition}

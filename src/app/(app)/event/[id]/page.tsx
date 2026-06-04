@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import {
-  ChevronLeft,
-  ExternalLink,
-  Sparkles,
-} from "lucide-react";
+import { ChevronLeft, ExternalLink } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
@@ -18,18 +14,18 @@ import type {
   DraftEventRow,
   EventStageRow,
   TaskRow,
-  WorkflowRow,
 } from "@/lib/supabase/types";
 import { EventDetailActions } from "./event-detail-actions";
-import { TaskKanban, type MemberSummary } from "./task-kanban";
+import { TaskKanban } from "./task-kanban";
+import { TaskSectionHeader } from "./task-section-header";
 import {
   ApplyPlaybookPicker,
   type TemplateOption,
 } from "./apply-playbook-picker";
-import { WorkflowHeader } from "./workflow-header";
 import { MetadataGrid } from "./metadata-block";
 import { CopyField } from "./copy-field";
 import { DraftView } from "./draft-view";
+import type { MemberSummary } from "./task-card";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -55,35 +51,18 @@ async function loadDraft(draftId: string): Promise<DraftEventRow | null> {
   return (data as DraftEventRow | null) ?? null;
 }
 
-async function loadWorkflowAndTasks(
+async function loadTasksFor(
   targetRef: string,
   targetKind: "event" | "draft",
-): Promise<{
-  workflow: WorkflowRow | null;
-  tasks: TaskRow[];
-}> {
+): Promise<TaskRow[]> {
   const supabase = await createSupabaseServerClient();
-  const { data: workflow } = await supabase
-    .from("workflows")
-    .select(
-      "id, template_id, name, target_kind, target_ref, starts_at, archived, created_by, created_at, updated_at",
-    )
+  const { data } = await supabase
+    .from("tasks")
+    .select("*")
     .eq("target_kind", targetKind)
     .eq("target_ref", targetRef)
-    .eq("archived", false)
-    .maybeSingle();
-
-  if (!workflow) return { workflow: null, tasks: [] };
-
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select(
-      "id, workflow_id, event_stage_id, title, description, sort_order, status, assigned_to, due_at, default_offset_days, completed_at, completed_by, created_at, updated_at",
-    )
-    .eq("workflow_id", workflow.id)
     .order("sort_order", { ascending: true });
-
-  return { workflow, tasks: tasks ?? [] };
+  return (data ?? []) as TaskRow[];
 }
 
 async function loadActiveMembers(): Promise<MemberSummary[]> {
@@ -123,6 +102,18 @@ async function loadActiveTemplates(): Promise<TemplateOption[]> {
   }));
 }
 
+async function loadTemplateNames(
+  templateIds: string[],
+): Promise<Map<string, string>> {
+  if (templateIds.length === 0) return new Map();
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("playbook_templates")
+    .select("id, name")
+    .in("id", templateIds);
+  return new Map((data ?? []).map((t) => [t.id, t.name]));
+}
+
 export default async function EventDetailPage({
   params,
 }: {
@@ -131,50 +122,37 @@ export default async function EventDetailPage({
   const { id: rawId } = await params;
   const eventId = decodeURIComponent(rawId);
 
-  // 1) If it looks like a UUID, try draft lookup first. Drafts live in our DB
-  //    and never have @google.com in their id.
+  // 1) UUID → try draft.
   if (UUID_RE.test(eventId)) {
-    const [draft, stages, members, templates] = await Promise.all([
+    const [draft, stages, members] = await Promise.all([
       loadDraft(eventId),
       loadStages(),
       loadActiveMembers(),
-      loadActiveTemplates(),
     ]);
     if (draft) {
-      const { workflow, tasks } = await loadWorkflowAndTasks(eventId, "draft");
+      const tasks = await loadTasksFor(eventId, "draft");
       return (
         <DraftView
           draft={draft}
-          workflow={workflow}
           tasks={tasks}
           stages={stages}
           members={members}
-          templates={templates}
         />
       );
     }
-    // UUID but no draft found — fall through to event lookup just in case (some
-    // future provider might give UUID-shaped event ids). Most cases → 404.
   }
 
   // 2) Published event flow.
-  const [
-    icsUrl,
-    googleStatus,
-    current,
-    stages,
-    workflowState,
-    templates,
-    members,
-  ] = await Promise.all([
-    getIcsUrl(),
-    getConnectionStatus(),
-    getCurrentUser(),
-    loadStages(),
-    loadWorkflowAndTasks(eventId, "event"),
-    loadActiveTemplates(),
-    loadActiveMembers(),
-  ]);
+  const [icsUrl, googleStatus, current, stages, tasks, templates, members] =
+    await Promise.all([
+      getIcsUrl(),
+      getConnectionStatus(),
+      getCurrentUser(),
+      loadStages(),
+      loadTasksFor(eventId, "event"),
+      loadActiveTemplates(),
+      loadActiveMembers(),
+    ]);
 
   if (!icsUrl) notFound();
 
@@ -185,14 +163,6 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  // Match the URL's event id against the ICS feed.
-  //
-  // Recurring events expose per-instance ids of the form `<uid>::<iso>`. When
-  // the master is edited via Google API, the next ICS feed may shift instance
-  // start times slightly (timezone, DST, second-precision rounding) — leaving
-  // the URL pointing at a stale instance ISO. Fall back to matching by the
-  // base UID (everything before `::`) and redirect to the canonical URL of
-  // the matched instance so the browser address bar stays accurate.
   let event = events.find((e) => e.id === eventId);
   if (!event) {
     const baseUidFromUrl = eventId.split("::")[0];
@@ -223,11 +193,20 @@ export default async function EventDetailPage({
   const at = baseUid.indexOf("@");
   const googleEventId = at === -1 ? baseUid : baseUid.slice(0, at);
 
-  const { workflow, tasks } = workflowState;
-  const allTasksDone =
-    workflow !== null &&
-    tasks.length > 0 &&
-    tasks.every((t) => t.status === "done" || t.status === "skipped");
+  const doneCount = tasks.filter(
+    (t) => t.status === "done" || t.status === "skipped",
+  ).length;
+  const appliedTemplateIds = Array.from(
+    new Set(
+      tasks
+        .map((t) => t.source_template_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+  const templateNamesById = await loadTemplateNames(appliedTemplateIds);
+  const appliedTemplateNames = appliedTemplateIds
+    .map((id) => templateNamesById.get(id))
+    .filter((n): n is string => Boolean(n));
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
@@ -317,63 +296,28 @@ export default async function EventDetailPage({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Tasks
           </h2>
-          {workflow && (
-            <ApplyPlaybookPicker
-              templates={templates}
-              eventId={event.id}
-              eventStartsAt={event.starts_at}
-              eventTitle={event.title}
-              trigger="button"
-            />
-          )}
+          <ApplyPlaybookPicker
+            templates={templates}
+            eventId={event.id}
+            eventStartsAt={event.starts_at}
+            eventTitle={event.title}
+            trigger="button"
+          />
         </div>
 
-        {workflow ? (
-          <>
-            <WorkflowHeader
-              workflow={workflow}
-              eventId={event.id}
-              taskCount={tasks.length}
-              doneCount={
-                tasks.filter(
-                  (t) => t.status === "done" || t.status === "skipped",
-                ).length
-              }
-              allDone={allTasksDone}
-            />
-            {tasks.length === 0 ? (
-              <div className="rounded-lg border border-dashed bg-card/40 px-6 py-8 text-center text-sm text-muted-foreground">
-                Workflow has no tasks yet — add one to each stage below.
-              </div>
-            ) : null}
-            <TaskKanban
-              workflowId={workflow.id}
-              eventId={event.id}
-              tasks={tasks}
-              stages={stages}
-              members={members}
-            />
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed bg-card/40 px-6 py-12 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-brand-tint text-brand-tint-foreground">
-              <Sparkles className="size-6" aria-hidden />
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">No playbook applied yet</p>
-              <p className="text-xs text-muted-foreground">
-                Pick a playbook to load a starter checklist for this event.
-              </p>
-            </div>
-            <ApplyPlaybookPicker
-              templates={templates}
-              eventId={event.id}
-              eventStartsAt={event.starts_at}
-              eventTitle={event.title}
-              trigger="empty-state"
-            />
-          </div>
-        )}
+        <TaskSectionHeader
+          taskCount={tasks.length}
+          doneCount={doneCount}
+          appliedTemplateNames={appliedTemplateNames}
+        />
+
+        <TaskKanban
+          targetKind="event"
+          targetRef={event.id}
+          tasks={tasks}
+          stages={stages}
+          members={members}
+        />
       </section>
 
       <section aria-label="Attached files" className="flex flex-col gap-3">

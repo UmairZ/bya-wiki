@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { encodeEventHref } from "@/lib/calendar/event-href";
 import { cn } from "@/lib/utils";
 
@@ -18,9 +19,8 @@ type MyTask = {
   status: "todo" | "in_progress" | "done" | "skipped";
   due_at: string | null;
   stage_name: string;
-  workflow_name: string;
-  workflow_id: string;
-  target_ref: string;
+  target_label: string;
+  target_href: string;
 };
 
 type Group = {
@@ -53,49 +53,77 @@ async function loadMyTasks(userId: string): Promise<MyTask[]> {
 
   const { data: tasks, error: tErr } = await supabase
     .from("tasks")
-    .select("id, title, status, due_at, event_stage_id, workflow_id")
+    .select(
+      "id, title, status, due_at, event_stage_id, target_kind, target_ref",
+    )
     .eq("assigned_to", userId)
     .in("status", ["todo", "in_progress"])
     .order("due_at", { ascending: true, nullsFirst: false });
   if (tErr || !tasks || tasks.length === 0) return [];
 
-  const workflowIds = Array.from(new Set(tasks.map((t) => t.workflow_id)));
   const stageIds = Array.from(new Set(tasks.map((t) => t.event_stage_id)));
+  const draftRefs = Array.from(
+    new Set(
+      tasks
+        .filter((t) => t.target_kind === "draft")
+        .map((t) => t.target_ref),
+    ),
+  );
+  const eventRefs = Array.from(
+    new Set(
+      tasks
+        .filter((t) => t.target_kind === "event")
+        .map((t) => t.target_ref),
+    ),
+  );
 
-  const [workflowsResp, stagesResp] = await Promise.all([
-    supabase
-      .from("workflows")
-      .select("id, name, target_ref, archived")
-      .in("id", workflowIds),
+  const [stagesResp, draftsResp, icsUrl] = await Promise.all([
     supabase.from("event_stages").select("id, name").in("id", stageIds),
+    draftRefs.length > 0
+      ? supabase
+          .from("draft_events")
+          .select("id, title")
+          .in("id", draftRefs)
+      : Promise.resolve({ data: [] }),
+    getIcsUrl(),
   ]);
 
-  const workflowsById = new Map(
-    (workflowsResp.data ?? [])
-      .filter((w) => !w.archived)
-      .map((w) => [w.id, w]),
-  );
   const stageById = new Map(
-    (stagesResp.data ?? []).map((s) => [s.id, s]),
+    (stagesResp.data ?? []).map((s) => [s.id, s.name as string]),
   );
+  const draftTitleById = new Map(
+    (draftsResp.data ?? []).map((d) => [d.id, d.title as string]),
+  );
+
+  let eventTitleById = new Map<string, string>();
+  if (icsUrl && eventRefs.length > 0) {
+    try {
+      const events = await getCalendarEvents({ icsUrl });
+      eventTitleById = new Map(events.map((e) => [e.id, e.title]));
+    } catch {
+      eventTitleById = new Map();
+    }
+  }
 
   return tasks
     .map((t) => {
-      const w = workflowsById.get(t.workflow_id);
-      if (!w) return null;
-      const stage = stageById.get(t.event_stage_id);
+      const stageName = stageById.get(t.event_stage_id) ?? "—";
+      let targetLabel: string;
+      if (t.target_kind === "draft") {
+        targetLabel = draftTitleById.get(t.target_ref) ?? "(deleted draft)";
+      } else {
+        targetLabel = eventTitleById.get(t.target_ref) ?? "(event)";
+      }
       return {
         id: t.id,
         title: t.title,
         status: t.status,
         due_at: t.due_at,
-        stage_name: stage?.name ?? "—",
-        workflow_name: w.name,
-        workflow_id: w.id,
-        target_ref: w.target_ref,
+        stage_name: stageName,
+        target_label: targetLabel,
+        target_href: encodeEventHref(t.target_ref),
       } as MyTask;
-    })
-    .filter((t): t is MyTask => t !== null);
+    });
 }
 
 export default async function MyTasksPage() {
@@ -201,7 +229,7 @@ function TaskRow({ task, now }: { task: MyTask; now: number }) {
 
   return (
     <Link
-      href={encodeEventHref(task.target_ref)}
+      href={task.target_href}
       prefetch
       className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:bg-brand-tint/30"
     >
@@ -211,7 +239,7 @@ function TaskRow({ task, now }: { task: MyTask; now: number }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <h3 className="truncate text-sm font-medium">{task.title}</h3>
         <p className="truncate text-xs text-muted-foreground">
-          {task.workflow_name}
+          {task.target_label}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">

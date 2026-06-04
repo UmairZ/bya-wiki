@@ -27,14 +27,12 @@ export function ApplyPlaybookPicker({
   eventStartsAt,
   eventTitle,
   trigger = "button",
-  targetKind = "event",
 }: {
   templates: TemplateOption[];
   eventId: string;
   eventStartsAt: string;
   eventTitle: string;
   trigger?: "button" | "empty-state";
-  targetKind?: "event" | "draft";
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -53,7 +51,7 @@ export function ApplyPlaybookPicker({
         eventId,
         eventStartsAt || null,
         eventTitle,
-        targetKind,
+        "event",
       );
       if (!r.ok) {
         toast.error(r.error);
