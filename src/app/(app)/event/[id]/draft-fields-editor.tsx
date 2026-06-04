@@ -164,6 +164,7 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
                 label="Date"
                 value={dateLabel}
                 placeholder="+ Add date"
+                required
               />
             </button>
           }
@@ -257,6 +258,7 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
               label="Location"
               value={draft.location}
               placeholder="+ Add location"
+              required
             />
           </button>
         }
@@ -315,6 +317,7 @@ function AudienceEditor({ draft }: { draft: DraftEventRow }) {
               value={draft.audience}
               placeholder="+ Set audience"
               highlight={Boolean(draft.audience)}
+              required
             />
           </button>
         }
@@ -359,6 +362,7 @@ function GenderEditor({ draft }: { draft: DraftEventRow }) {
               value={draft.gender}
               placeholder="+ Set gender"
               highlight={Boolean(draft.gender)}
+              required
             />
           </button>
         }
@@ -469,6 +473,7 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
               label="Register"
               value={null}
               placeholder="+ Add registration link"
+              required
             />
           </button>
         }

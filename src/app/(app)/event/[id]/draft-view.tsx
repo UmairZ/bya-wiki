@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
+  AlertTriangle,
   ChevronLeft,
   MoreHorizontal,
   Send,
@@ -134,19 +135,12 @@ export function DraftView({
       <header className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="secondary"
-                className="bg-muted text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-              >
-                Draft
-              </Badge>
-              {!canPublish && (
-                <span className="text-xs text-muted-foreground">
-                  Need: {missing.join(", ")} before you can publish
-                </span>
-              )}
-            </div>
+            <Badge
+              variant="secondary"
+              className="w-fit bg-muted text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Draft
+            </Badge>
             {editingTitle ? (
               <Input
                 value={title}
@@ -211,6 +205,27 @@ export function DraftView({
           </div>
         </div>
       </header>
+
+      {!canPublish && (
+        <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+          <AlertTriangle
+            className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400"
+            aria-hidden
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <p className="text-sm font-medium text-foreground">
+              Fill in {missing.length} field
+              {missing.length === 1 ? "" : "s"} to publish
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Missing:{" "}
+              <span className="font-medium text-foreground/80">
+                {missing.join(", ")}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
 
       <DraftFieldsEditor draft={draft} />
 

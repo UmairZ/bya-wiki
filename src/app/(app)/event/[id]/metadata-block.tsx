@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, MapPin, Tag, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, Clock, MapPin, Tag, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatFullDateString, formatTime } from "@/lib/date-time";
 import type { AudienceTag, GenderTag } from "@/lib/supabase/types";
@@ -34,14 +34,16 @@ function formatTimeRange(
 }
 
 /** Compact, read-only metadata grid. Each row shows an icon, label, and value
- *  (or a placeholder when unset). The Draft view wraps these in inline editors;
- *  the Published view just renders them as-is. */
+ *  (or a placeholder when unset). When `required && !value`, the row is
+ *  rendered with an amber warning treatment so it's obvious something needs
+ *  filling in (used on draft view; on published events `required` is false). */
 export function MetadataRow({
   Icon,
   label,
   value,
   placeholder,
   highlight,
+  required,
   onClick,
 }: {
   Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
@@ -49,32 +51,49 @@ export function MetadataRow({
   value: string | null;
   placeholder?: string;
   highlight?: boolean;
+  required?: boolean;
   onClick?: () => void;
 }) {
   const display = value ?? placeholder ?? "—";
   const isClickable = Boolean(onClick);
   const isMissing = !value;
+  const isMissingRequired = required && isMissing;
 
   const inner = (
     <>
-      <Icon
+      {isMissingRequired ? (
+        <AlertTriangle
+          className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+          aria-hidden
+        />
+      ) : (
+        <Icon
+          className={cn(
+            "size-3.5 shrink-0",
+            isMissing ? "text-muted-foreground/40" : "text-muted-foreground",
+          )}
+          aria-hidden
+        />
+      )}
+      <span
         className={cn(
-          "size-3.5 shrink-0",
-          isMissing ? "text-muted-foreground/40" : "text-muted-foreground",
+          "shrink-0 text-[10px] font-semibold uppercase tracking-wider",
+          isMissingRequired ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
         )}
-        aria-hidden
-      />
-      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      >
         {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
       </span>
       <span
         className={cn(
           "truncate text-sm",
-          isMissing
-            ? "text-muted-foreground/60 italic"
-            : highlight
-              ? "font-medium text-foreground"
-              : "text-foreground/90",
+          isMissingRequired
+            ? "font-medium text-amber-700 dark:text-amber-400"
+            : isMissing
+              ? "text-muted-foreground/60 italic"
+              : highlight
+                ? "font-medium text-foreground"
+                : "text-foreground/90",
         )}
       >
         {display}
@@ -82,19 +101,24 @@ export function MetadataRow({
     </>
   );
 
+  const wrapperCls = cn(
+    "flex items-center gap-2 rounded-md px-2 py-1",
+    isMissingRequired && "bg-amber-500/10 ring-1 ring-amber-500/40",
+  );
+
   if (!isClickable) {
-    return (
-      <div className="flex items-center gap-2 rounded-md px-2 py-1">
-        {inner}
-      </div>
-    );
+    return <div className={wrapperCls}>{inner}</div>;
   }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+      className={cn(
+        wrapperCls,
+        "group w-full text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50",
+        isMissingRequired && "hover:bg-amber-500/20",
+      )}
     >
       {inner}
     </button>

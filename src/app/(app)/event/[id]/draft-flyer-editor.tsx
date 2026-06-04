@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
-import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,11 +43,21 @@ export function DraftFlyerEditor({
     });
   }
 
+  const missing = !flyerStoragePath;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <label
+          className={cn(
+            "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider",
+            missing ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
+          )}
+        >
+          {missing && (
+            <AlertTriangle className="size-3.5" aria-hidden />
+          )}
           Flyer
+          <span className="ml-0.5 text-destructive">*</span>
         </label>
         <span className="text-[10px] text-muted-foreground/70">
           1:1 square looks best · ≤ 5 MB
