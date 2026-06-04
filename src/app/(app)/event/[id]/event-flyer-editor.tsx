@@ -78,51 +78,47 @@ export function EventFlyerEditor({
                 aria-hidden
               />
               <p className="text-foreground/80">
-                This event has a flyer but no registration link.{" "}
-                <span className="font-medium">
-                  It won&apos;t appear on /r/events
-                </span>{" "}
-                until you add a registration URL via{" "}
-                <span className="font-mono">Edit event</span>.
+                Flyer set but no registration link —{" "}
+                <span className="font-medium">won&apos;t appear on /r/events</span>{" "}
+                until added.
               </p>
             </div>
           )}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-            <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border bg-muted">
-              <Image
-                src={flyerPublicUrl(flyerStoragePath)}
-                alt="Event flyer"
-                fill
-                sizes="200px"
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-            <div className="flex gap-2 sm:flex-col">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-                disabled={pending}
-              >
-                {pending ? (
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                ) : (
-                  <Upload className="size-3.5" aria-hidden />
-                )}
-                Replace
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemove}
-                disabled={pending}
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="size-3.5" aria-hidden />
-                Remove
-              </Button>
-            </div>
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
+            <Image
+              src={flyerPublicUrl(flyerStoragePath)}
+              alt="Event flyer"
+              fill
+              sizes="(min-width: 768px) 260px, 100vw"
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => inputRef.current?.click()}
+              disabled={pending}
+              className="flex-1"
+            >
+              {pending ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+              ) : (
+                <Upload className="size-3.5" aria-hidden />
+              )}
+              Replace
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRemove}
+              disabled={pending}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Remove flyer"
+            >
+              <Trash2 className="size-3.5" aria-hidden />
+            </Button>
           </div>
         </div>
       ) : (
@@ -141,7 +137,7 @@ export function EventFlyerEditor({
           }}
           disabled={pending}
           className={cn(
-            "flex aspect-square w-full max-w-[200px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 text-center transition-colors",
+            "flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 text-center transition-colors",
             dragOver
               ? "border-primary bg-brand-tint/40 text-primary"
               : "border-muted-foreground/30 text-muted-foreground hover:border-primary/40 hover:bg-brand-tint/20 hover:text-foreground",

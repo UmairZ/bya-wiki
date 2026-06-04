@@ -268,60 +268,64 @@ export default async function EventDetailPage({
           />
         </div>
 
-        {canWrite ? (
-          <PublishedFieldsEditor event={event} parsed={parsed} />
-        ) : (
-          <div className="rounded-lg border bg-card p-3">
-            <MetadataGrid
-              values={{
-                starts_at: event.starts_at,
-                ends_at: event.ends_at,
-                all_day: event.all_day,
-                location: event.location,
-                audience: parsed.audience,
-                gender: parsed.gender,
-                free_tags: parsed.tags,
-              }}
-            />
-            {parsed.registration_url && (
-              <div className="mt-2">
-                <CopyField
-                  label="Register"
-                  value={parsed.registration_url}
-                  href={parsed.registration_url}
+        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+          <EventFlyerEditor
+            eventRef={event.id}
+            flyerStoragePath={flyerPath}
+            hasRegistrationUrl={Boolean(parsed.registration_url)}
+          />
+
+          <div className="flex flex-col gap-4">
+            {canWrite ? (
+              <PublishedFieldsEditor event={event} parsed={parsed} />
+            ) : (
+              <div className="rounded-lg border bg-card p-3">
+                <MetadataGrid
+                  values={{
+                    starts_at: event.starts_at,
+                    ends_at: event.ends_at,
+                    all_day: event.all_day,
+                    location: event.location,
+                    audience: parsed.audience,
+                    gender: parsed.gender,
+                    free_tags: parsed.tags,
+                  }}
                 />
+                {parsed.registration_url && (
+                  <div className="mt-2">
+                    <CopyField
+                      label="Register"
+                      value={parsed.registration_url}
+                      href={parsed.registration_url}
+                    />
+                  </div>
+                )}
               </div>
             )}
+
+            {event.html_link && (
+              <div>
+                <a
+                  href={event.html_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                  <ExternalLink className="size-4" aria-hidden />
+                  Open in Google Calendar
+                </a>
+              </div>
+            )}
+
+            {canWrite ? (
+              <PublishedDescriptionEditor event={event} parsed={parsed} />
+            ) : parsed.description ? (
+              <p className="whitespace-pre-line text-sm text-foreground/90">
+                {parsed.description}
+              </p>
+            ) : null}
           </div>
-        )}
-
-        {event.html_link && (
-          <div>
-            <a
-              href={event.html_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              <ExternalLink className="size-4" aria-hidden />
-              Open in Google Calendar
-            </a>
-          </div>
-        )}
-
-        {canWrite ? (
-          <PublishedDescriptionEditor event={event} parsed={parsed} />
-        ) : parsed.description ? (
-          <p className="whitespace-pre-line text-sm text-foreground/90">
-            {parsed.description}
-          </p>
-        ) : null}
-
-        <EventFlyerEditor
-          eventRef={event.id}
-          flyerStoragePath={flyerPath}
-          hasRegistrationUrl={Boolean(parsed.registration_url)}
-        />
+        </div>
       </header>
 
       <section aria-label="Tasks" className="flex flex-col gap-3">

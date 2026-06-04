@@ -73,23 +73,24 @@ export function DraftFlyerEditor({
       />
 
       {flyerStoragePath ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-          <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border bg-muted">
+        <div className="flex flex-col gap-2">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
             <Image
               src={flyerPublicUrl(flyerStoragePath)}
               alt="Event flyer"
               fill
-              sizes="200px"
+              sizes="(min-width: 768px) 260px, 100vw"
               className="object-cover"
               unoptimized
             />
           </div>
-          <div className="flex gap-2 sm:flex-col">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => inputRef.current?.click()}
               disabled={pending}
+              className="flex-1"
             >
               {pending ? (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -104,9 +105,9 @@ export function DraftFlyerEditor({
               onClick={handleRemove}
               disabled={pending}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Remove flyer"
             >
               <Trash2 className="size-3.5" aria-hidden />
-              Remove
             </Button>
           </div>
         </div>
@@ -126,7 +127,7 @@ export function DraftFlyerEditor({
           }}
           disabled={pending}
           className={cn(
-            "flex aspect-square w-full max-w-[200px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 text-center transition-colors",
+            "flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 text-center transition-colors",
             dragOver
               ? "border-primary bg-brand-tint/40 text-primary"
               : "border-muted-foreground/30 text-muted-foreground hover:border-primary/40 hover:bg-brand-tint/20 hover:text-foreground",

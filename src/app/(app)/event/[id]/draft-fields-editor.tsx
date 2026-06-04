@@ -77,7 +77,7 @@ function combineDateTime(
 export function DraftFieldsEditor({ draft }: { draft: DraftEventRow }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-1 rounded-lg border bg-card p-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-1 rounded-lg border bg-card p-3 sm:grid-cols-2">
         <DateTimeEditor draft={draft} />
         <LocationEditor draft={draft} />
         <AudienceEditor draft={draft} />
@@ -158,7 +158,7 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
           render={
-            <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+            <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
               <MetadataRow
                 Icon={CalendarDays}
                 label="Date"
@@ -252,7 +252,7 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+          <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={MapPin}
               label="Location"
@@ -310,7 +310,7 @@ function AudienceEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+          <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={Users}
               label="Audience"
@@ -355,7 +355,7 @@ function GenderEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+          <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={Users}
               label="Gender"
@@ -413,7 +413,7 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-md px-2 py-1 md:col-span-2 lg:col-span-3",
+          "flex flex-wrap items-center gap-2 rounded-md px-2 py-1 sm:col-span-2",
         )}
       >
         <CopyField
@@ -430,7 +430,7 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
           Edit
         </Button>
         <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger render={<span className="hidden" />} />
+          <DropdownMenuTrigger nativeButton={false} render={<span className="hidden" />} />
           <DropdownMenuContent align="end" className="w-80 p-3">
             <div
               className="flex flex-col gap-2"
@@ -467,7 +467,7 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+          <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={LinkIcon}
               label="Register"
@@ -530,7 +530,7 @@ function TagsEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
+          <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <div className="flex items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-muted/50">
               <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
               <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

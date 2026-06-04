@@ -91,7 +91,7 @@ export function PublishedFieldsEditor({
   const values: Values = { event, parsed };
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-1 rounded-lg border bg-card p-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-1 rounded-lg border bg-card p-3 sm:grid-cols-2">
         <DateTimeEditor values={values} />
         <LocationEditor values={values} />
         <AudienceEditor values={values} />
@@ -158,7 +158,7 @@ function DateTimeEditor({ values }: { values: Values }) {
           render={
             <button
               type="button"
-              className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+              className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
             >
               <MetadataRow
                 Icon={CalendarDays}
@@ -255,7 +255,7 @@ function LocationEditor({ values }: { values: Values }) {
         render={
           <button
             type="button"
-            className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+            className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
           >
             <MetadataRow
               Icon={MapPin}
@@ -311,7 +311,7 @@ function AudienceEditor({ values }: { values: Values }) {
         render={
           <button
             type="button"
-            className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+            className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
           >
             <MetadataRow
               Icon={Users}
@@ -359,7 +359,7 @@ function GenderEditor({ values }: { values: Values }) {
         render={
           <button
             type="button"
-            className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+            className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
           >
             <MetadataRow
               Icon={Users}
@@ -419,7 +419,7 @@ function RegistrationEditor({ values }: { values: Values }) {
 
   if (parsed.registration_url) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-md px-2 py-1 md:col-span-2 lg:col-span-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-md px-2 py-1 sm:col-span-2">
         <CopyField
           label="Register"
           value={parsed.registration_url}
@@ -434,7 +434,7 @@ function RegistrationEditor({ values }: { values: Values }) {
           Edit
         </Button>
         <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger render={<span className="hidden" />} />
+          <DropdownMenuTrigger nativeButton={false} render={<span className="hidden" />} />
           <DropdownMenuContent align="end" className="w-80 p-3">
             <div
               className="flex flex-col gap-2"
@@ -481,7 +481,7 @@ function RegistrationEditor({ values }: { values: Values }) {
         render={
           <button
             type="button"
-            className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+            className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
           >
             <MetadataRow
               Icon={LinkIcon}
@@ -545,7 +545,7 @@ function TagsEditor({ values }: { values: Values }) {
         render={
           <button
             type="button"
-            className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
+            className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50"
           >
             <div className="flex items-center gap-2 rounded-md px-2 py-1">
               <Users

@@ -102,8 +102,11 @@ export function MetadataRow({
     </>
   );
 
+  // min-w-0 is critical: in a CSS grid cell, flex items default to
+  // min-width:auto which lets the truncate value push the cell wider than
+  // the grid track. Setting min-w-0 lets the value actually truncate.
   const wrapperCls = cn(
-    "flex items-center gap-2 rounded-md px-2 py-1",
+    "flex min-w-0 items-center gap-2 rounded-md px-2 py-1",
     isMissingRequired && "bg-amber-500/10 ring-1 ring-amber-500/40",
   );
 
@@ -154,7 +157,7 @@ export function MetadataGrid({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      <div className="grid gap-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-1 sm:grid-cols-2">
         <MetadataRow Icon={CalendarDays} label="Date" value={dateStr} placeholder="Not set" />
         <MetadataRow Icon={Clock} label="Time" value={timeStr} placeholder="Not set" />
         <MetadataRow Icon={MapPin} label="Location" value={values.location} placeholder="Not set" />

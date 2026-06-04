@@ -228,12 +228,13 @@ export function DraftView({
         </div>
       )}
 
-      <DraftFieldsEditor draft={draft} />
-
-      <DraftFlyerEditor
-        draftId={draft.id}
-        flyerStoragePath={draft.flyer_storage_path}
-      />
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <DraftFlyerEditor
+          draftId={draft.id}
+          flyerStoragePath={draft.flyer_storage_path}
+        />
+        <DraftFieldsEditor draft={draft} />
+      </div>
 
       <section aria-label="Tasks" className="flex flex-col gap-3">
         <div className="flex items-end justify-between gap-2">
