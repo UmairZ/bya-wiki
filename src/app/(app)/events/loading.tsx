@@ -24,15 +24,8 @@ function StageSkeleton({ label }: { label: string }) {
 export default function EventsLoading() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
-          <Skeleton className="h-4 w-[280px]" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-[110px] rounded-md" />
-          <Skeleton className="h-9 w-[100px] rounded-md" />
-        </div>
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
       </header>
 
       <section className="flex flex-col gap-3">
@@ -46,11 +39,15 @@ export default function EventsLoading() {
         </div>
       </section>
 
-      <div className="flex items-center gap-2 px-2 py-2 text-sm">
-        <Skeleton className="size-4 rounded" />
-        <Skeleton className="h-4 w-[110px]" />
-        <Skeleton className="h-3 w-[100px]" />
-      </div>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          All events
+        </h2>
+        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+          <Skeleton className="h-[420px] w-full rounded-lg" />
+          <Skeleton className="hidden h-[420px] w-full rounded-lg lg:block" />
+        </div>
+      </section>
     </div>
   );
 }
