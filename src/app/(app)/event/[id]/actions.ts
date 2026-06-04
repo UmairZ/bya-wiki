@@ -459,6 +459,25 @@ export async function uploadEventFlyerAction(
   return { ok: true, data: { path: storagePath } };
 }
 
+export async function setFlyerFlagsAction(
+  eventRef: string,
+  patch: { registration_closed?: boolean; hidden_from_public?: boolean },
+): Promise<ActionResult> {
+  await requireCurrentUser();
+  const uid = baseGoogleUid(eventRef);
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("event_flyers")
+    .update(patch)
+    .eq("google_event_uid", uid);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/event/${encodeURIComponent(eventRef)}`);
+  revalidatePath("/r/events");
+  return { ok: true, data: null };
+}
+
 export async function removeEventFlyerAction(
   eventRef: string,
 ): Promise<ActionResult> {

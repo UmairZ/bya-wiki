@@ -72,15 +72,26 @@ async function loadTasksFor(
   return (data ?? []) as TaskRow[];
 }
 
-async function loadEventFlyerPath(eventRef: string): Promise<string | null> {
+type FlyerInfo = {
+  path: string;
+  registrationClosed: boolean;
+  hiddenFromPublic: boolean;
+} | null;
+
+async function loadEventFlyerInfo(eventRef: string): Promise<FlyerInfo> {
   const supabase = await createSupabaseServerClient();
   const uid = eventRef.split("::")[0];
   const { data } = await supabase
     .from("event_flyers")
-    .select("flyer_storage_path")
+    .select("flyer_storage_path, registration_closed, hidden_from_public")
     .eq("google_event_uid", uid)
     .maybeSingle();
-  return data?.flyer_storage_path ?? null;
+  if (!data) return null;
+  return {
+    path: data.flyer_storage_path,
+    registrationClosed: data.registration_closed,
+    hiddenFromPublic: data.hidden_from_public,
+  };
 }
 
 async function loadActiveMembers(): Promise<MemberSummary[]> {
@@ -169,7 +180,7 @@ export default async function EventDetailPage({
     tasks,
     templates,
     members,
-    flyerPath,
+    flyerInfo,
   ] = await Promise.all([
     getIcsUrl(),
     getConnectionStatus(),
@@ -178,7 +189,7 @@ export default async function EventDetailPage({
     loadTasksFor(eventId, "event"),
     loadActiveTemplates(),
     loadActiveMembers(),
-    loadEventFlyerPath(eventId),
+    loadEventFlyerInfo(eventId),
   ]);
 
   if (!icsUrl) notFound();
@@ -271,8 +282,10 @@ export default async function EventDetailPage({
         <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
           <EventFlyerEditor
             eventRef={event.id}
-            flyerStoragePath={flyerPath}
+            flyerStoragePath={flyerInfo?.path ?? null}
             hasRegistrationUrl={Boolean(parsed.registration_url)}
+            registrationClosed={flyerInfo?.registrationClosed ?? false}
+            hiddenFromPublic={flyerInfo?.hiddenFromPublic ?? false}
           />
 
           <div className="flex flex-col gap-4">

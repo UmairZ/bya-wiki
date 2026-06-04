@@ -502,6 +502,8 @@ export type EventFlyerRow = {
   google_event_uid: string;
   flyer_storage_path: string;
   uploaded_by: string | null;
+  registration_closed: boolean;
+  hidden_from_public: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -510,11 +512,15 @@ export type EventFlyerInsert = {
   google_event_uid: string;
   flyer_storage_path: string;
   uploaded_by?: string | null;
+  registration_closed?: boolean;
+  hidden_from_public?: boolean;
 };
 
 export type EventFlyerUpdate = {
   flyer_storage_path?: string;
   uploaded_by?: string | null;
+  registration_closed?: boolean;
+  hidden_from_public?: boolean;
 };
 
 // ---------------------------------------------------------------------------

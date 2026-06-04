@@ -1,12 +1,13 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowUpRight, Calendar, MapPin } from "lucide-react";
+import { ArrowUpRight, Calendar, Lock, MapPin } from "lucide-react";
 // eslint-disable-next-line @next/next/no-img-element -- intentional: the
 // lockup logo is small + cached + we want unconstrained aspect ratio
 import { APP_NAME, LOGO_LOCKUP_SRC } from "@/lib/brand";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
+import { cn } from "@/lib/utils";
 import { flyerPublicUrl } from "@/lib/flyer-url";
 import {
   dayOfMonthInOrgTz,
@@ -48,6 +49,7 @@ type Tile = {
   ends_at: string | null;
   all_day: boolean;
   location: string | null;
+  registration_closed: boolean;
 };
 
 async function loadTiles(): Promise<Tile[]> {
@@ -77,28 +79,32 @@ async function loadTiles(): Promise<Tile[]> {
   );
   const { data: flyers } = await admin
     .from("event_flyers")
-    .select("google_event_uid, flyer_storage_path")
+    .select(
+      "google_event_uid, flyer_storage_path, registration_closed, hidden_from_public",
+    )
     .in("google_event_uid", baseUids);
   const flyerByUid = new Map(
-    (flyers ?? []).map((f) => [f.google_event_uid, f.flyer_storage_path]),
+    (flyers ?? []).map((f) => [f.google_event_uid, f]),
   );
 
   const tiles: Tile[] = [];
   for (const event of upcoming) {
     const uid = event.id.split("::")[0];
-    const flyerPath = flyerByUid.get(uid);
-    if (!flyerPath) continue;
+    const flyer = flyerByUid.get(uid);
+    if (!flyer) continue;
+    if (flyer.hidden_from_public) continue;
     const parsed = parseDescription(event.description);
     if (!parsed.registration_url) continue;
     tiles.push({
       uid: event.id,
       title: event.title,
-      flyer_url: flyerPublicUrl(flyerPath),
+      flyer_url: flyerPublicUrl(flyer.flyer_storage_path),
       registration_url: parsed.registration_url,
       starts_at: event.starts_at,
       ends_at: event.ends_at,
       all_day: event.all_day,
       location: event.location,
+      registration_closed: flyer.registration_closed,
     });
   }
 
@@ -174,7 +180,10 @@ export default async function PublicEventsPage() {
                       alt={t.title}
                       fill
                       sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                      className={cn(
+                        "object-cover transition-transform duration-300 group-hover:scale-[1.04]",
+                        t.registration_closed && "grayscale-[60%]",
+                      )}
                       unoptimized
                     />
                     {/* Floating date chip in top-left — readable on any flyer
@@ -187,6 +196,12 @@ export default async function PublicEventsPage() {
                         {dayOfMonthInOrgTz(t.starts_at)}
                       </span>
                     </div>
+                    {t.registration_closed && (
+                      <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-foreground/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-background shadow-md backdrop-blur">
+                        <Lock className="size-3" aria-hidden />
+                        Closed
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2 p-4">
                     <h2 className="line-clamp-2 text-base font-semibold leading-snug">
@@ -208,13 +223,23 @@ export default async function PublicEventsPage() {
                         <span className="line-clamp-2">{t.location}</span>
                       </p>
                     )}
-                    <div className="mt-1 flex items-center gap-1 text-sm font-medium text-primary transition-colors group-hover:text-primary/80">
-                      <span>Register</span>
-                      <ArrowUpRight
-                        className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                        aria-hidden
-                      />
-                    </div>
+                    {t.registration_closed ? (
+                      <div className="mt-1 flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                        <span>View flyer</span>
+                        <ArrowUpRight
+                          className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          aria-hidden
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-1 text-sm font-medium text-primary transition-colors group-hover:text-primary/80">
+                        <span>Register</span>
+                        <ArrowUpRight
+                          className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          aria-hidden
+                        />
+                      </div>
+                    )}
                   </div>
                 </a>
               </li>

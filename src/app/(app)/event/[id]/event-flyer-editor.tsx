@@ -2,13 +2,22 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
-import { AlertTriangle, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  EyeOff,
+  ImagePlus,
+  Loader2,
+  Lock,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { flyerPublicUrl } from "@/lib/flyer-url";
 import {
   removeEventFlyerAction,
+  setFlyerFlagsAction,
   uploadEventFlyerAction,
 } from "./actions";
 
@@ -18,6 +27,8 @@ export function EventFlyerEditor({
   eventRef,
   flyerStoragePath,
   hasRegistrationUrl,
+  registrationClosed,
+  hiddenFromPublic,
 }: {
   eventRef: string;
   flyerStoragePath: string | null;
@@ -25,6 +36,8 @@ export function EventFlyerEditor({
    *  false + a flyer exists, we surface a warning since the public page
    *  requires both. */
   hasRegistrationUrl: boolean;
+  registrationClosed: boolean;
+  hiddenFromPublic: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
@@ -46,6 +59,17 @@ export function EventFlyerEditor({
     if (!window.confirm("Remove this flyer?")) return;
     startTransition(async () => {
       const r = await removeEventFlyerAction(eventRef);
+      if (!r.ok) toast.error(r.error);
+    });
+  }
+
+  function toggleFlag(field: "registration_closed" | "hidden_from_public") {
+    const next =
+      field === "registration_closed"
+        ? !registrationClosed
+        : !hiddenFromPublic;
+    startTransition(async () => {
+      const r = await setFlyerFlagsAction(eventRef, { [field]: next });
       if (!r.ok) toast.error(r.error);
     });
   }
@@ -111,6 +135,40 @@ export function EventFlyerEditor({
               <Trash2 className="size-3.5" aria-hidden />
             </Button>
           </div>
+
+          <fieldset className="flex flex-col gap-1.5 rounded-md border bg-card/40 px-3 py-2">
+            <legend className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Public visibility
+            </legend>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={registrationClosed}
+                onChange={() => toggleFlag("registration_closed")}
+                disabled={pending}
+                className="size-3.5 accent-[var(--brand)]"
+              />
+              <Lock
+                className="size-3 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+              <span className="flex-1">Registration closed</span>
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={hiddenFromPublic}
+                onChange={() => toggleFlag("hidden_from_public")}
+                disabled={pending}
+                className="size-3.5 accent-[var(--brand)]"
+              />
+              <EyeOff
+                className="size-3 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+              <span className="flex-1">Hide flyer from /r/events</span>
+            </label>
+          </fieldset>
         </div>
       ) : (
         <button
