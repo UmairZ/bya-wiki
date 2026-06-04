@@ -158,13 +158,7 @@ export default async function PublicEventsPage() {
             </p>
           </div>
         ) : (
-          <ul
-            className="grid justify-center gap-6"
-            style={{
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(min(100%, 280px), 360px))",
-            }}
-          >
+          <ul className="grid grid-cols-2 gap-3 sm:gap-6">
             {tiles.map((t) => (
               <li key={t.uid}>
                 <a
