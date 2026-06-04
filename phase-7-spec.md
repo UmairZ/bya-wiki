@@ -556,10 +556,38 @@ Each ships independently — DB migration → code → user test → push.
 - **Template editor uses up/down arrows** for now; drag-to-reorder deferred to a polish pass.
 
 ### Future, noted but not designed
+
 - **Day-of mode** on the event detail page (§4.4.2): a chronological run-of-show view that takes over the screen on event day for live use. Phase 8+.
 - **Workflow chaining** via automation `apply_playbook` action — "sub-stages" without bloating the stages table.
-- **Bike Rack module** — an "ideas" parking lot separate from the Events calendar. Items have no date and no workflow. Promoting an idea = creating a Google Calendar event + (optionally) auto-applying the Event prep playbook. Frees the Events Kanban Stage 1 (Scoping) to mean "scheduled, locking in details" rather than "rough idea." Phase 8+.
+- **Bike Rack module** — a general ideas backlog (events, programs, partnerships, infra — heterogeneous). Items have no date and no workflow. Distinct from Drafts (below): Bike Rack = "maybe someday"; Drafts = "committed, working out details." Some Bike Rack items become events; some don't. Phase 8+.
+
+- **Drafts: private-first event creation** — replaces the current "Scoping" first stage. Events start as drafts in our DB, not on Google Calendar; only the title is required. Other fields (date, time, location, description, registration URL, demographics) get filled progressively as planning happens. The Events Kanban Drafts column shows drafts from the DB; Pre-event / Day-of / Wrap-up show committed events as today.
+
+  **Promotion (Drafts → Pre-event = "Publish to calendar")** — explicit button on the draft detail page, owner-only. Required to publish: title, date, time, location, audience, gender. On publish: create the event in Google Calendar via API, update `workflows.target_ref` from draft UUID → Google event UID, delete the draft row. The workflow + tasks persist through.
+
+  **Demographics tags** — two structured fields that coexist with the existing free-form `Tags:` line:
+  - **Audience**: dropdown of {Kids, Jr. Youth, Youth, Young Professionals, Family}
+  - **Gender**: dropdown of {Girls, Boys, Both}
+
+  Stored in the event description via structured markers (`Audience: Youth` / `Gender: Both`) — same round-trip convention as Register/Tags. Existing events without demographics are grandfathered: metadata block hides what's not set, no nag. Free-form tags stay as a secondary chip row.
+
+  **Restructured event-detail header** — replace today's free-form header with a single metadata block above the Task Kanban:
+  - Single-row table on desktop: Date · Time · Location · Audience · Gender
+  - Registration URL renders as a **copy-field** (inline URL + copy-to-clipboard button), not a Register button — staff need to grab and share it, not click it
+  - "Open in Google Calendar" link stays
+  - Description renders below
+
+  **Schema sketch:**
+  - `draft_events(id, title not null, starts_at nullable, ends_at nullable, all_day, location, description, registration_url, audience, gender, free_tags[], created_by, created_at, updated_at)`
+  - `workflows.target_kind` adds `'draft'`; `workflows.target_ref` for drafts = draft UUID
+  - `tasks.default_offset_days` field (copied from template at apply time) so adding a date to a draft later can backfill due_at across all of its workflow's tasks
+
+  **/event/[id] handler** — looks up draft UUID first, falls back to Google event UID. Same page component renders both with conditional treatment (publish button, missing-field placeholders, "+ Add date" inline composer).
+
+  **Open at build time:** editing demographics after publish (lean: yes, writes back to GCal description); soft-archive for abandoned drafts (lean: `archived` flag); whether this is Phase 7e (wedged before automation) or Phase 8.
+
 - **Reimbursements** — first surface under the Finances module. Members submit claims (title, amount, receipt file, optional event link); owner approves / denies / marks paid. Per-event surface on `/event/[id]` lists claims tied to that event. Permissions: members see only their own, owner sees all. Status flow `draft → submitted → approved|denied → paid`. Schema sketch: `reimbursements(id, submitter_id, event_ref nullable, title, amount_cents, receipt_storage_path, description, status, approved_by/at, paid_by/at, payment_method)` + a `reimbursement-receipts` Storage bucket. Automation tie-in: when an event's "Reconcile expenses" task is checked, surface any unapproved reimbursements for that event so they don't get lost. Open questions: (a) editors see each other's claims? — leaning no; (b) per-event budget tracking — defer until we see whether reimbursements alone fill the need.
+
 - **Event types** (next playbook iteration) — add an `event_type` field on `workflows` (and eventually on `events`); per-type `default_playbook_id` so applying the right checklist becomes automatic on event creation. Builds on the per-event-type playbook organization the owner is starting now.
 
 ### Still open
