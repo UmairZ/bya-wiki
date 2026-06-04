@@ -18,6 +18,7 @@ import type {
 import { EventDetailActions } from "./event-detail-actions";
 import { TaskKanban } from "./task-kanban";
 import { TaskSectionHeader } from "./task-section-header";
+import { ClearTasksMenu } from "./clear-tasks-menu";
 import {
   ApplyPlaybookPicker,
   type TemplateOption,
@@ -296,13 +297,20 @@ export default async function EventDetailPage({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Tasks
           </h2>
-          <ApplyPlaybookPicker
-            templates={templates}
-            eventId={event.id}
-            eventStartsAt={event.starts_at}
-            eventTitle={event.title}
-            trigger="button"
-          />
+          <div className="flex items-center gap-1">
+            <ApplyPlaybookPicker
+              templates={templates}
+              eventId={event.id}
+              eventStartsAt={event.starts_at}
+              eventTitle={event.title}
+              trigger="button"
+            />
+            <ClearTasksMenu
+              targetKind="event"
+              targetRef={event.id}
+              taskCount={tasks.length}
+            />
+          </div>
         </div>
 
         <TaskSectionHeader

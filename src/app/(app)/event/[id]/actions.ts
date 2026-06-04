@@ -262,3 +262,24 @@ export async function setTaskDueAction(
   revalidateEventDetail(targetRef);
   return { ok: true, data: null };
 }
+
+/** Nuke every task attached to this event/draft. Owner-only — uses RLS:
+ *  task delete policy currently allows owners only. */
+export async function clearAllTasksAction(
+  targetKind: "event" | "draft",
+  targetRef: string,
+): Promise<ActionResult<{ deleted: number }>> {
+  await requireCurrentUser();
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .delete()
+    .eq("target_kind", targetKind)
+    .eq("target_ref", targetRef)
+    .select("id");
+  if (error) return { ok: false, error: error.message };
+
+  revalidateEventAndKanban(targetRef);
+  return { ok: true, data: { deleted: (data ?? []).length } };
+}

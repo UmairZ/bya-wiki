@@ -32,6 +32,7 @@ import type {
 import { DraftFieldsEditor } from "./draft-fields-editor";
 import { DraftTaskList } from "./draft-task-list";
 import { TaskSectionHeader } from "./task-section-header";
+import { ClearTasksMenu } from "./clear-tasks-menu";
 import type { MemberSummary } from "./task-card";
 
 export function DraftView({
@@ -215,9 +216,16 @@ export function DraftView({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Tasks
           </h2>
-          <span className="text-xs text-muted-foreground/70">
-            Playbooks apply after publishing.
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground/70">
+              Playbooks apply after publishing.
+            </span>
+            <ClearTasksMenu
+              targetKind="draft"
+              targetRef={draft.id}
+              taskCount={tasks.length}
+            />
+          </div>
         </div>
 
         <TaskSectionHeader
