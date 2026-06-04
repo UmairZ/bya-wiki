@@ -309,6 +309,11 @@ export {
 // Internal: shape a request body for the Calendar API.
 // ---------------------------------------------------------------------------
 
+// Anchored to the org timezone (see src/lib/date-time.ts for the same
+// constant). Used to tell Google how to interpret/store the dateTime so
+// it's unambiguous on round-trip.
+const ORG_TIMEZONE_FOR_GCAL = "America/Los_Angeles";
+
 function buildGoogleEventBody(payload: EventPayload) {
   const description = encodeDescription({
     description: payload.description,
@@ -332,9 +337,19 @@ function buildGoogleEventBody(payload: EventPayload) {
     // Google all-day end is exclusive — same-day events end on the next day.
     body.end = { date: addOneDay(endDate) };
   } else {
-    body.start = { dateTime: payload.starts_at };
+    // Critical: PATCHing { dateTime: "...Z" } without a timeZone shifts the
+    // stored event time (Google interprets the field weirdly when it replaces
+    // a previously-localized start object). Sending both dateTime AND
+    // timeZone makes the intent unambiguous — the dateTime is parsed
+    // according to its embedded offset (Z = UTC) and stored with the
+    // calendar's preferred display TZ.
+    body.start = {
+      dateTime: payload.starts_at,
+      timeZone: ORG_TIMEZONE_FOR_GCAL,
+    };
     body.end = {
       dateTime: payload.ends_at ?? payload.starts_at,
+      timeZone: ORG_TIMEZONE_FOR_GCAL,
     };
   }
 

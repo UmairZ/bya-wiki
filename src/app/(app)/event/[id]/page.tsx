@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ChevronLeft, ExternalLink } from "lucide-react";
+import { CopyField } from "./copy-field";
+import { MetadataGrid } from "./metadata-block";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
@@ -24,8 +26,11 @@ import {
   ApplyPlaybookPicker,
   type TemplateOption,
 } from "./apply-playbook-picker";
-import { MetadataGrid } from "./metadata-block";
-import { CopyField } from "./copy-field";
+import {
+  PublishedDescriptionEditor,
+  PublishedFieldsEditor,
+  PublishedTitleEditor,
+} from "./published-fields-editor";
 import { DraftView } from "./draft-view";
 import type { MemberSummary } from "./task-card";
 
@@ -248,9 +253,13 @@ export default async function EventDetailPage({
       <header className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {event.title}
-            </h1>
+            {canWrite ? (
+              <PublishedTitleEditor event={event} />
+            ) : (
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {event.title}
+              </h1>
+            )}
           </div>
           <EventDetailActions
             canWrite={canWrite}
@@ -271,29 +280,35 @@ export default async function EventDetailPage({
           />
         </div>
 
-        <div className="rounded-lg border bg-card p-3">
-          <MetadataGrid
-            values={{
-              starts_at: event.starts_at,
-              ends_at: event.ends_at,
-              all_day: event.all_day,
-              location: event.location,
-              audience: parsed.audience,
-              gender: parsed.gender,
-              free_tags: parsed.tags,
-            }}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {parsed.registration_url && (
-            <CopyField
-              label="Register"
-              value={parsed.registration_url}
-              href={parsed.registration_url}
+        {canWrite ? (
+          <PublishedFieldsEditor event={event} parsed={parsed} />
+        ) : (
+          <div className="rounded-lg border bg-card p-3">
+            <MetadataGrid
+              values={{
+                starts_at: event.starts_at,
+                ends_at: event.ends_at,
+                all_day: event.all_day,
+                location: event.location,
+                audience: parsed.audience,
+                gender: parsed.gender,
+                free_tags: parsed.tags,
+              }}
             />
-          )}
-          {event.html_link && (
+            {parsed.registration_url && (
+              <div className="mt-2">
+                <CopyField
+                  label="Register"
+                  value={parsed.registration_url}
+                  href={parsed.registration_url}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {event.html_link && (
+          <div>
             <a
               href={event.html_link}
               target="_blank"
@@ -303,14 +318,16 @@ export default async function EventDetailPage({
               <ExternalLink className="size-4" aria-hidden />
               Open in Google Calendar
             </a>
-          )}
-        </div>
+          </div>
+        )}
 
-        {parsed.description && (
+        {canWrite ? (
+          <PublishedDescriptionEditor event={event} parsed={parsed} />
+        ) : parsed.description ? (
           <p className="whitespace-pre-line text-sm text-foreground/90">
             {parsed.description}
           </p>
-        )}
+        ) : null}
 
         <EventFlyerEditor
           eventRef={event.id}

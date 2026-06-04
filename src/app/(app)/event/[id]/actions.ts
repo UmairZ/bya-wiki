@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -8,7 +8,20 @@ import {
   deleteFlyer,
   uploadFlyer,
 } from "@/lib/flyer-storage";
-import type { TaskInsert, TaskStatus, TaskUpdate } from "@/lib/supabase/types";
+import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
+import { parseDescription } from "@/lib/calendar/markers";
+import {
+  getConnectionStatus,
+  updateEvent,
+  type EventPayload,
+} from "@/lib/calendar/google";
+import type {
+  AudienceTag,
+  GenderTag,
+  TaskInsert,
+  TaskStatus,
+  TaskUpdate,
+} from "@/lib/supabase/types";
 
 export type ActionResult<T = null> =
   | { ok: true; data: T }
@@ -265,6 +278,106 @@ export async function setTaskDueAction(
   if (error) return { ok: false, error: error.message };
 
   revalidateEventDetail(targetRef);
+  return { ok: true, data: null };
+}
+
+// ---------------------------------------------------------------------------
+// Published-event field updates (one field at a time)
+//
+// Each click-to-edit popover on the published event detail calls this with
+// just the field(s) it changed. We fetch the current event from the ICS
+// feed, merge in the patch, and PATCH Google with the full payload. PATCH
+// preserves fields we don't touch (most importantly `recurrence` /RRULE).
+// ---------------------------------------------------------------------------
+
+export type EventFieldPatch = Partial<{
+  title: string;
+  description: string;
+  location: string | null;
+  registration_url: string | null;
+  tags: string[];
+  audience: AudienceTag | null;
+  gender: GenderTag | null;
+  starts_at: string;
+  ends_at: string | null;
+  all_day: boolean;
+}>;
+
+export async function updateEventFieldAction(
+  eventRef: string,
+  patch: EventFieldPatch,
+): Promise<ActionResult> {
+  await requireCurrentUser();
+
+  const icsUrl = await getIcsUrl();
+  if (!icsUrl) {
+    return { ok: false, error: "Calendar isn't connected." };
+  }
+  const status = await getConnectionStatus();
+  if (!status.connected || !status.calendarId) {
+    return {
+      ok: false,
+      error: "Google Calendar isn't connected for writes.",
+    };
+  }
+
+  let events;
+  try {
+    events = await getCalendarEvents({ icsUrl });
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  const event = events.find((e) => e.id === eventRef);
+  if (!event) {
+    return { ok: false, error: "Event not found in feed." };
+  }
+
+  // Extract Google's eventId from `<uid>@google.com[::<iso>]` — Google's API
+  // wants the bare id, not the ICS UID with @google.com.
+  const baseUid = event.id.split("::")[0];
+  const at = baseUid.indexOf("@");
+  const googleEventId = at === -1 ? baseUid : baseUid.slice(0, at);
+
+  const parsed = parseDescription(event.description);
+
+  // Merge: patch wins; explicit `null` in patch is intentional clear.
+  const payload: EventPayload = {
+    title: "title" in patch ? (patch.title ?? "") : event.title,
+    description:
+      "description" in patch ? (patch.description ?? "") : parsed.description,
+    location:
+      "location" in patch
+        ? (patch.location ?? undefined)
+        : (event.location ?? undefined),
+    registration_url:
+      "registration_url" in patch
+        ? (patch.registration_url ?? undefined)
+        : (parsed.registration_url ?? undefined),
+    tags: "tags" in patch ? (patch.tags ?? []) : parsed.tags,
+    audience: "audience" in patch ? patch.audience : parsed.audience,
+    gender: "gender" in patch ? patch.gender : parsed.gender,
+    starts_at: "starts_at" in patch ? patch.starts_at! : event.starts_at,
+    ends_at: "ends_at" in patch ? (patch.ends_at ?? null) : event.ends_at,
+    all_day: "all_day" in patch ? !!patch.all_day : event.all_day,
+  };
+
+  try {
+    await updateEvent(status.calendarId, googleEventId, payload);
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  updateTag("calendar");
+  revalidatePath(`/event/${encodeURIComponent(eventRef)}`);
+  revalidatePath("/events");
+  revalidatePath("/r/events");
   return { ok: true, data: null };
 }
 
