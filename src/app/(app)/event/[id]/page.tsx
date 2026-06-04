@@ -312,7 +312,11 @@ export default async function EventDetailPage({
           </p>
         )}
 
-        <EventFlyerEditor eventRef={event.id} flyerStoragePath={flyerPath} />
+        <EventFlyerEditor
+          eventRef={event.id}
+          flyerStoragePath={flyerPath}
+          hasRegistrationUrl={Boolean(parsed.registration_url)}
+        />
       </header>
 
       <section aria-label="Tasks" className="flex flex-col gap-3">
