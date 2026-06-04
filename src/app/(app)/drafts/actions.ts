@@ -36,10 +36,26 @@ export async function createDraftAction(
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { ok: false, error: "Title is required." };
 
+  // Optional pre-filled date in YYYY-MM-DD (from the calendar-day click flow).
+  // Default time = 9 AM local, all_day=false. User can adjust on the detail
+  // page.
+  const seedDate = String(formData.get("seed_date") ?? "").trim();
+  let starts_at: string | null = null;
+  if (seedDate) {
+    const [y, m, d] = seedDate.split("-").map(Number);
+    if (y && m && d) {
+      starts_at = new Date(y, m - 1, d, 9, 0, 0, 0).toISOString();
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("draft_events")
-    .insert({ title, created_by: profile.id })
+    .insert({
+      title,
+      created_by: profile.id,
+      starts_at,
+    })
     .select("id")
     .single();
   if (error || !data) {
@@ -162,7 +178,9 @@ export async function deleteDraftAction(
 // ---------------------------------------------------------------------------
 
 export type PublishValidationError = {
-  missing: Array<"date" | "location" | "audience" | "gender">;
+  missing: Array<
+    "date" | "location" | "audience" | "gender" | "registration link"
+  >;
 };
 
 function validateForPublish(draft: DraftEventRow): PublishValidationError | null {
@@ -171,6 +189,9 @@ function validateForPublish(draft: DraftEventRow): PublishValidationError | null
   if (!draft.location || !draft.location.trim()) missing.push("location");
   if (!draft.audience) missing.push("audience");
   if (!draft.gender) missing.push("gender");
+  if (!draft.registration_url || !draft.registration_url.trim()) {
+    missing.push("registration link");
+  }
   return missing.length > 0 ? { missing } : null;
 }
 

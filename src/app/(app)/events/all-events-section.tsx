@@ -4,15 +4,18 @@ import { useMemo, useState } from "react";
 import type { CalendarEvent } from "@/lib/calendar/types";
 import { EventsCalendar } from "./events-calendar";
 import { EventsMonthList } from "./events-month-list";
+import { DayDraftDialog } from "./day-draft-dialog";
 
 /** "All events" section: month calendar (2/3) + list of events that month
  *  (1/3). Stacks on mobile. State for the displayed month lives here so
- *  navigation stays in sync. */
+ *  calendar + list stay in sync. Clicking a day cell opens a small dialog
+ *  to create a new draft for that date. */
 export function AllEventsSection({ events }: { events: CalendarEvent[] }) {
   const [displayedMonth, setDisplayedMonth] = useState<Date>(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [draftDate, setDraftDate] = useState<Date | null>(null);
 
   const monthEvents = useMemo(() => {
     const year = displayedMonth.getFullYear();
@@ -34,6 +37,7 @@ export function AllEventsSection({ events }: { events: CalendarEvent[] }) {
             events={monthEvents}
             displayedMonth={displayedMonth}
             onMonthChange={setDisplayedMonth}
+            onDayClick={setDraftDate}
           />
         </div>
         <div>
@@ -43,6 +47,13 @@ export function AllEventsSection({ events }: { events: CalendarEvent[] }) {
           />
         </div>
       </div>
+      <DayDraftDialog
+        date={draftDate}
+        open={Boolean(draftDate)}
+        onOpenChange={(next) => {
+          if (!next) setDraftDate(null);
+        }}
+      />
     </section>
   );
 }

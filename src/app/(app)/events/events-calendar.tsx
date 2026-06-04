@@ -8,17 +8,21 @@ import { encodeEventHref } from "@/lib/calendar/event-href";
 import type { CalendarEvent } from "@/lib/calendar/types";
 
 /** Month grid with prev/next navigation. Renders event chips on their start
- *  date. Click a chip to navigate to the event detail. */
+ *  date. Click a chip to navigate to the event detail. Click empty day space
+ *  (the day cell, but outside any chip) to create a new draft for that day. */
 export function EventsCalendar({
   events,
   displayedMonth,
   onMonthChange,
+  onDayClick,
 }: {
   /** Events whose start_at falls within the currently-displayed month. */
   events: CalendarEvent[];
   /** First-of-month Date for the currently displayed month. */
   displayedMonth: Date;
   onMonthChange: (next: Date) => void;
+  /** Optional: clicking an empty area in a day cell triggers this. */
+  onDayClick?: (date: Date) => void;
 }) {
   const year = displayedMonth.getFullYear();
   const month = displayedMonth.getMonth();
@@ -113,14 +117,12 @@ export function EventsCalendar({
           const isOtherMonth = d.getMonth() !== month;
           const isToday = key === todayKey;
           const dayEvents = byDay.get(key) ?? [];
-          return (
-            <div
-              key={key}
-              className={cn(
-                "flex min-h-[72px] flex-col gap-0.5 bg-card p-1 align-top md:min-h-[88px]",
-                isOtherMonth && "bg-muted/20",
-              )}
-            >
+          const clickable = Boolean(onDayClick);
+          // Use a button if the cell is clickable; div otherwise. We snapshot
+          // the date in a closure-local because `d` is shared.
+          const dayDate = new Date(d);
+          const cellBody = (
+            <>
               <span
                 className={cn(
                   "inline-flex size-5 items-center justify-center self-start rounded-full text-[10px] font-semibold",
@@ -137,6 +139,7 @@ export function EventsCalendar({
                     <Link
                       href={encodeEventHref(e.id)}
                       prefetch
+                      onClick={(ev) => ev.stopPropagation()}
                       className="block truncate rounded bg-brand-tint px-1 py-0.5 text-[10px] font-medium text-brand-tint-foreground transition-colors hover:bg-brand-tint/80"
                       title={e.title}
                     >
@@ -150,6 +153,33 @@ export function EventsCalendar({
                   </li>
                 )}
               </ul>
+            </>
+          );
+          if (clickable) {
+            return (
+              <button
+                type="button"
+                key={key}
+                onClick={() => onDayClick!(dayDate)}
+                aria-label={`Create draft for ${dayDate.toLocaleDateString()}`}
+                className={cn(
+                  "group flex min-h-[72px] flex-col gap-0.5 bg-card p-1 text-left align-top transition-colors hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:bg-brand-tint/30 md:min-h-[88px]",
+                  isOtherMonth && "bg-muted/20",
+                )}
+              >
+                {cellBody}
+              </button>
+            );
+          }
+          return (
+            <div
+              key={key}
+              className={cn(
+                "flex min-h-[72px] flex-col gap-0.5 bg-card p-1 align-top md:min-h-[88px]",
+                isOtherMonth && "bg-muted/20",
+              )}
+            >
+              {cellBody}
             </div>
           );
         })}

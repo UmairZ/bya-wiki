@@ -104,6 +104,7 @@ export function DraftView({
   if (!draft.location?.trim()) missing.push("location");
   if (!draft.audience) missing.push("audience");
   if (!draft.gender) missing.push("gender");
+  if (!draft.registration_url?.trim()) missing.push("registration link");
   const canPublish = missing.length === 0;
 
   // Drafts only ever have Drafts-stage tasks (the first stage). Fall back
