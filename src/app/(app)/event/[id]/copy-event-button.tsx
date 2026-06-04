@@ -41,10 +41,16 @@ export function buildEventCopyText(e: EventForCopy): string {
 
   if (e.location) lines.push(`📍 ${e.location}`);
 
-  const ag = [e.audience, e.gender].filter(Boolean);
+  // "Both" is the default — omit so the line reads cleaner. Girls/Boys is
+  // the meaningful signal worth surfacing in a share blurb.
+  const genderToShow = e.gender && e.gender !== "Both" ? e.gender : null;
+  const ag = [e.audience, genderToShow].filter(Boolean);
   if (ag.length > 0) lines.push(`👥 ${ag.join(" · ")}`);
 
-  if (e.registration_url) lines.push(`🔗 ${e.registration_url}`);
+  // Always link to the canonical bit.ly that lands on /r/events — the
+  // page lists every active flyer and is easier to remember/share than
+  // any one event's registration URL.
+  if (e.registration_url) lines.push(`🔗 bit.ly/bya-events`);
 
   if (e.free_tags.length > 0) {
     lines.push(`🏷 ${e.free_tags.map((t) => `#${t.replace(/\s+/g, "")}`).join(" ")}`);
