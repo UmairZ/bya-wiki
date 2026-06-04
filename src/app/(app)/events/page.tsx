@@ -193,9 +193,9 @@ export default async function EventsPage() {
         </Alert>
       )}
 
-      <section aria-label="Upcoming & in progress" className="flex flex-col gap-3">
+      <section aria-label="Upcoming events" className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Upcoming &amp; in progress
+          Upcoming events
         </h2>
         <EventsKanban
           stages={stages}

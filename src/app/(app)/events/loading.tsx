@@ -37,7 +37,7 @@ export default function EventsLoading() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Upcoming &amp; in progress
+          Upcoming events
         </h2>
         <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-4">
           {STAGE_LABELS.map((l) => (
