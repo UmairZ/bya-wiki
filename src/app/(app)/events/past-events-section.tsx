@@ -10,7 +10,7 @@ import { encodeEventHref } from "@/lib/calendar/event-href";
 import type { EnrichedEvent } from "./workflow-state";
 
 export function PastEventsSection({ events }: { events: EnrichedEvent[] }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [query, setQuery] = useState("");
 
   // Default sort: most-recent wrap-up first; fall back to event date.
