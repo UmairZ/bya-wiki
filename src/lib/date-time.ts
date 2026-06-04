@@ -1,5 +1,15 @@
 // Small set of date helpers — no external library.
 
+// All event date display is anchored to this timezone so server-rendered
+// (Node, UTC) and client-rendered (browser, user's TZ) views agree on what
+// day a given timestamp falls in. Without this, an event set to Jul 4 7 PM
+// Pacific would show as "Jul 5" on server-rendered cards (because the UTC
+// equivalent crosses midnight) and "Jul 4" on client-rendered detail pages.
+//
+// If the org ever spans multiple timezones, move this into an app_settings
+// row.
+export const ORG_TIMEZONE = "America/Los_Angeles";
+
 export function startOfDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -78,23 +88,95 @@ export function isoToDateOnlyInput(iso: string | null | undefined): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-const DAY_FMT = new Intl.DateTimeFormat(undefined, {
+const DAY_FMT = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
   month: "short",
   day: "numeric",
+  timeZone: ORG_TIMEZONE,
 });
 
-const TIME_FMT = new Intl.DateTimeFormat(undefined, {
+const TIME_FMT = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
+  timeZone: ORG_TIMEZONE,
 });
 
-const FULL_FMT = new Intl.DateTimeFormat(undefined, {
+const FULL_FMT = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
   month: "short",
   day: "numeric",
   year: "numeric",
+  timeZone: ORG_TIMEZONE,
 });
+
+const MONTH_DAY_FMT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: ORG_TIMEZONE,
+});
+
+const MONTH_LONG_FMT = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: ORG_TIMEZONE,
+});
+
+const MONTH_SHORT_FMT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  timeZone: ORG_TIMEZONE,
+});
+
+const ISO_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: ORG_TIMEZONE,
+});
+
+/** "YYYY-MM-DD" of an ISO timestamp in the org timezone. Used to bucket
+ *  events by day in calendar grids etc. */
+export function isoDateInOrgTz(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  // en-CA produces "YYYY-MM-DD" — convenient.
+  return ISO_DATE_FMT.format(d);
+}
+
+/** "Jul 4" — month + day in the org timezone. */
+export function formatMonthDay(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return MONTH_DAY_FMT.format(d);
+}
+
+/** "Jul" — short month name in the org timezone. */
+export function formatMonthShort(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return MONTH_SHORT_FMT.format(d);
+}
+
+/** Day-of-month number ("4") in the org timezone. */
+export function dayOfMonthInOrgTz(input: string | Date): number {
+  const d = typeof input === "string" ? new Date(input) : input;
+  const parts = ISO_DATE_FMT.formatToParts(d);
+  return Number(parts.find((p) => p.type === "day")!.value);
+}
+
+/** "July 2026" — long month + year in the org timezone. */
+export function formatMonthLong(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return MONTH_LONG_FMT.format(d);
+}
+
+/** Format just the time portion of an ISO timestamp in the org timezone. */
+export function formatTime(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return TIME_FMT.format(d);
+}
+
+/** Format a long-form date "Sat, Jul 4, 2026" in the org timezone. */
+export function formatFullDateString(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return FULL_FMT.format(d);
+}
 
 export function formatEventWhen(event: {
   starts_at: string;

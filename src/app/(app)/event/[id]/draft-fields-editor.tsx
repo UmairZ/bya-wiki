@@ -33,6 +33,7 @@ import {
   type GenderTag,
 } from "@/lib/supabase/types";
 import { updateDraftAction } from "@/app/(app)/drafts/actions";
+import { formatFullDateString, formatTime } from "@/lib/date-time";
 import { MetadataBadge, MetadataRow } from "./metadata-block";
 import { CopyField } from "./copy-field";
 
@@ -143,23 +144,13 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
     });
   }
 
-  const dateLabel = draft.starts_at
-    ? new Date(draft.starts_at).toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const dateLabel = draft.starts_at ? formatFullDateString(draft.starts_at) : null;
   const timeLabel = draft.starts_at
     ? draft.all_day
       ? "All day"
       : draft.ends_at
-        ? `${new Date(draft.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric" })} – ${new Date(draft.ends_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric" })}`
-        : new Date(draft.starts_at).toLocaleTimeString(undefined, {
-            hour: "numeric",
-            minute: "numeric",
-          })
+        ? `${formatTime(draft.starts_at)} – ${formatTime(draft.ends_at)}`
+        : formatTime(draft.starts_at)
     : null;
 
   return (

@@ -5,7 +5,13 @@ import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { encodeEventHref } from "@/lib/calendar/event-href";
 import type { CalendarEvent } from "@/lib/calendar/types";
-import { formatEventWhen } from "@/lib/date-time";
+import {
+  dayOfMonthInOrgTz,
+  formatEventWhen,
+  formatMonthLong,
+  formatMonthShort,
+  isoDateInOrgTz,
+} from "@/lib/date-time";
 
 /** Chronological list of events for the displayed month. Stays in sync with
  *  the calendar via the parent's `displayedMonth` state. */
@@ -16,10 +22,7 @@ export function EventsMonthList({
   events: CalendarEvent[];
   displayedMonth: Date;
 }) {
-  const monthLabel = displayedMonth.toLocaleString(undefined, {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = formatMonthLong(displayedMonth);
 
   const sorted = [...events].sort(
     (a, b) =>
@@ -27,7 +30,7 @@ export function EventsMonthList({
   );
 
   const today = new Date();
-  const todayKey = isoDate(today);
+  const todayKey = isoDateInOrgTz(today);
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
@@ -49,7 +52,7 @@ export function EventsMonthList({
             const isPast =
               (e.ends_at ? new Date(e.ends_at).getTime() : start.getTime()) <
               today.getTime();
-            const isToday = isoDate(start) === todayKey;
+            const isToday = isoDateInOrgTz(start) === todayKey;
             return (
               <li key={e.id}>
                 <Link
@@ -70,10 +73,10 @@ export function EventsMonthList({
                     aria-hidden
                   >
                     <span className="text-[9px] font-semibold uppercase leading-none">
-                      {start.toLocaleString(undefined, { month: "short" })}
+                      {formatMonthShort(start)}
                     </span>
                     <span className="text-sm font-bold leading-none mt-0.5">
-                      {start.getDate()}
+                      {dayOfMonthInOrgTz(start)}
                     </span>
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -98,9 +101,3 @@ export function EventsMonthList({
   );
 }
 
-function isoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}

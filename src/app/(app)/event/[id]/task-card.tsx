@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { formatMonthDay } from "@/lib/date-time";
 import type {
   EventStageRow,
   TaskRow,
@@ -134,12 +135,7 @@ export function TaskCard({
   }
 
   const dueDate = task.due_at ? new Date(task.due_at) : null;
-  const dueLabel = dueDate
-    ? dueDate.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
-    : null;
+  const dueLabel = dueDate ? formatMonthDay(dueDate) : null;
   const isOverdue =
     dueDate && !isDone && !isSkipped && dueDate.getTime() < Date.now();
 

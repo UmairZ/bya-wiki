@@ -9,6 +9,7 @@ import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { encodeEventHref } from "@/lib/calendar/event-href";
+import { formatDay } from "@/lib/date-time";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Tasks" };
@@ -223,9 +224,7 @@ export default async function MyTasksPage() {
 function TaskRow({ task, now }: { task: MyTask; now: number }) {
   const due = task.due_at ? new Date(task.due_at) : null;
   const isOverdue = due && due.getTime() < startOfLocalDay(new Date(now));
-  const dueLabel = due
-    ? due.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
-    : null;
+  const dueLabel = due ? formatDay(due) : null;
 
   return (
     <Link

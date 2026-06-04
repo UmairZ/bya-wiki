@@ -2,6 +2,7 @@
 
 import { CalendarDays, Clock, MapPin, Tag, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatFullDateString, formatTime } from "@/lib/date-time";
 import type { AudienceTag, GenderTag } from "@/lib/supabase/types";
 
 export type MetadataValues = {
@@ -14,24 +15,11 @@ export type MetadataValues = {
   free_tags: string[];
 };
 
-function formatDate(iso: string | null, allDay: boolean): string | null {
+function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  if (allDay) {
-    return d.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-  return d.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatFullDateString(d);
 }
 
 function formatTimeRange(
@@ -41,14 +29,8 @@ function formatTimeRange(
 ): string | null {
   if (allDay) return "All day";
   if (!startsAt) return null;
-  const start = new Date(startsAt);
-  const end = endsAt ? new Date(endsAt) : null;
-  const fmt: Intl.DateTimeFormatOptions = {
-    hour: "numeric",
-    minute: "numeric",
-  };
-  if (!end) return start.toLocaleTimeString(undefined, fmt);
-  return `${start.toLocaleTimeString(undefined, fmt)} – ${end.toLocaleTimeString(undefined, fmt)}`;
+  if (!endsAt) return formatTime(startsAt);
+  return `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
 }
 
 /** Compact, read-only metadata grid. Each row shows an icon, label, and value
@@ -151,7 +133,7 @@ export function MetadataGrid({
   values: MetadataValues;
   className?: string;
 }) {
-  const dateStr = formatDate(values.starts_at, values.all_day);
+  const dateStr = formatDate(values.starts_at);
   const timeStr = formatTimeRange(
     values.starts_at,
     values.ends_at,

@@ -18,6 +18,7 @@ import {
   createDraftAction,
   type ActionResult,
 } from "@/app/(app)/drafts/actions";
+import { formatFullDateString } from "@/lib/date-time";
 
 /** Title-only dialog that creates a draft with a pre-set date and jumps to
  *  it. Triggered by clicking a day cell on the All Events calendar. Cancel
@@ -52,14 +53,7 @@ export function DayDraftDialog({
 
   // Format YYYY-MM-DD for the hidden field and a nice label for the heading.
   const seedDate = date ? toYmd(date) : "";
-  const dateLabel = date
-    ? date.toLocaleDateString(undefined, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "";
+  const dateLabel = date ? formatFullDateString(date) : "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

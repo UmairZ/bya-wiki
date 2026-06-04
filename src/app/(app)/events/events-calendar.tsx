@@ -5,6 +5,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { encodeEventHref } from "@/lib/calendar/event-href";
+import {
+  formatMonthLong,
+  isoDateInOrgTz,
+} from "@/lib/date-time";
 import type { CalendarEvent } from "@/lib/calendar/types";
 
 /** Month grid with prev/next navigation. Renders event chips on their start
@@ -27,7 +31,7 @@ export function EventsCalendar({
   const year = displayedMonth.getFullYear();
   const month = displayedMonth.getMonth();
   const today = new Date();
-  const todayKey = isoDate(today);
+  const todayKey = isoDateInOrgTz(today);
 
   // Build a 6-week grid starting from the Sunday on or before the 1st.
   const firstOfMonth = new Date(year, month, 1);
@@ -41,10 +45,10 @@ export function EventsCalendar({
     days.push(d);
   }
 
-  // Bucket events by their start date.
+  // Bucket events by their start date in the org timezone.
   const byDay = new Map<string, CalendarEvent[]>();
   for (const e of events) {
-    const key = isoDate(new Date(e.starts_at));
+    const key = isoDateInOrgTz(e.starts_at);
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key)!.push(e);
   }
@@ -55,10 +59,7 @@ export function EventsCalendar({
     );
   }
 
-  const monthLabel = displayedMonth.toLocaleString(undefined, {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = formatMonthLong(displayedMonth);
 
   function jump(deltaMonths: number) {
     const next = new Date(year, month + deltaMonths, 1);
@@ -113,7 +114,10 @@ export function EventsCalendar({
           </div>
         ))}
         {days.map((d) => {
-          const key = isoDate(d);
+          // For grid cell keys we use the *local* date because `d` was built
+          // from a local-time month iteration; mixing org-tz here would shift
+          // grid placement for users far from PT.
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
           const isOtherMonth = d.getMonth() !== month;
           const isToday = key === todayKey;
           const dayEvents = byDay.get(key) ?? [];
@@ -188,9 +192,3 @@ export function EventsCalendar({
   );
 }
 
-function isoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}

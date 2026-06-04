@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { AlertCircle, MapPin } from "lucide-react";
-import { formatEventWhen } from "@/lib/date-time";
+import {
+  dayOfMonthInOrgTz,
+  formatEventWhen,
+  formatMonthDay,
+  formatMonthShort,
+} from "@/lib/date-time";
 import { parseDescription } from "@/lib/calendar/markers";
 import { encodeEventHref } from "@/lib/calendar/event-href";
 import { cn } from "@/lib/utils";
@@ -67,7 +72,6 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
 
 function EventCard({ enriched }: { enriched: EnrichedEvent }) {
   const { event, taskCount, doneCount, overdueCount } = enriched;
-  const start = new Date(event.starts_at);
   const parsed = parseDescription(event.description);
   return (
     <Link
@@ -84,10 +88,10 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
           aria-hidden
         >
           <span className="text-[10px] font-semibold uppercase">
-            {start.toLocaleString(undefined, { month: "short" })}
+            {formatMonthShort(event.starts_at)}
           </span>
           <span className="text-sm font-bold leading-none">
-            {start.getDate()}
+            {dayOfMonthInOrgTz(event.starts_at)}
           </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -139,12 +143,7 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
 
 function DraftCard({ enriched }: { enriched: EnrichedDraft }) {
   const { draft, taskCount, doneCount, overdueCount } = enriched;
-  const dateLabel = draft.starts_at
-    ? new Date(draft.starts_at).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
-    : null;
+  const dateLabel = draft.starts_at ? formatMonthDay(draft.starts_at) : null;
   return (
     <Link
       href={`/event/${encodeURIComponent(draft.id)}`}
