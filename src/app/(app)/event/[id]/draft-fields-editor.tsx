@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import {
   CalendarDays,
   Check,
-  ChevronDown,
   Clock,
   Link as LinkIcon,
   MapPin,
@@ -23,7 +22,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import {
   AUDIENCE_VALUES,
   GENDER_VALUES,
@@ -35,7 +33,7 @@ import {
 import { updateDraftAction } from "@/app/(app)/drafts/actions";
 import { formatFullDateString, formatTime } from "@/lib/date-time";
 import { MetadataBadge, MetadataRow } from "./metadata-block";
-import { CopyField } from "./copy-field";
+import { CopyEventButton } from "./copy-event-button";
 
 function isoToDateInput(iso: string | null): string {
   if (!iso) return "";
@@ -77,13 +75,30 @@ function combineDateTime(
 export function DraftFieldsEditor({ draft }: { draft: DraftEventRow }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-1 rounded-lg border bg-card p-3 sm:grid-cols-2">
-        <DateTimeEditor draft={draft} />
-        <LocationEditor draft={draft} />
-        <AudienceEditor draft={draft} />
-        <GenderEditor draft={draft} />
-        <RegistrationEditor draft={draft} />
-        <TagsEditor draft={draft} />
+      <div className="relative rounded-lg border bg-card p-3">
+        <CopyEventButton
+          event={{
+            title: draft.title,
+            starts_at: draft.starts_at,
+            ends_at: draft.ends_at,
+            all_day: draft.all_day,
+            location: draft.location,
+            audience: draft.audience,
+            gender: draft.gender,
+            free_tags: draft.free_tags,
+            registration_url: draft.registration_url,
+            description: draft.description,
+          }}
+          className="absolute right-2 top-2 z-10"
+        />
+        <div className="grid gap-1 pt-7 sm:grid-cols-2 sm:pt-0">
+          <DateTimeEditor draft={draft} />
+          <LocationEditor draft={draft} />
+          <AudienceEditor draft={draft} />
+          <GenderEditor draft={draft} />
+          <RegistrationEditor draft={draft} />
+          <TagsEditor draft={draft} />
+        </div>
       </div>
 
       <DescriptionEditor draft={draft} />
@@ -409,59 +424,14 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
     );
   }
 
-  if (draft.registration_url) {
-    return (
-      <div
-        className={cn(
-          "flex flex-wrap items-center gap-2 rounded-md px-2 py-1 sm:col-span-2",
-        )}
-      >
-        <CopyField
-          label="Register"
-          value={draft.registration_url}
-          href={draft.registration_url}
-        />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className="text-xs"
-        >
-          Edit
-        </Button>
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger nativeButton={false} render={<span className="hidden" />} />
-          <DropdownMenuContent align="end" className="w-80 p-3">
-            <div
-              className="flex flex-col gap-2"
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <Label htmlFor={`reg-${draft.id}`}>Registration URL</Label>
-              <Input
-                id={`reg-${draft.id}`}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="https://forms.gle/…"
-                autoFocus
-                type="url"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    commit();
-                  }
-                }}
-              />
-              <div className="flex justify-end gap-1 pt-1">
-                <Button size="sm" onClick={commit} disabled={pending}>
-                  Save
-                </Button>
-              </div>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
+  function clear() {
+    setValue("");
+    save({ registration_url: null }, () => setOpen(false));
   }
+
+  const displayValue = draft.registration_url
+    ? draft.registration_url.replace(/^https?:\/\//, "")
+    : null;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -471,7 +441,7 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
             <MetadataRow
               Icon={LinkIcon}
               label="Register"
-              value={null}
+              value={displayValue}
               placeholder="+ Add registration link"
               required
             />
@@ -498,8 +468,13 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
               }
             }}
           />
-          <div className="flex justify-end pt-1">
-            <Button size="sm" onClick={commit} disabled={pending}>
+          <div className="flex justify-between gap-1 pt-1">
+            {draft.registration_url && (
+              <Button variant="ghost" size="sm" onClick={clear} disabled={pending}>
+                <X className="size-3.5" aria-hidden /> Clear
+              </Button>
+            )}
+            <Button size="sm" className="ml-auto" onClick={commit} disabled={pending}>
               Save
             </Button>
           </div>

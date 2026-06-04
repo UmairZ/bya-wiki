@@ -37,7 +37,7 @@ import type { CalendarEvent } from "@/lib/calendar/types";
 import type { ParsedDescription } from "@/lib/calendar/markers";
 import { updateEventFieldAction } from "./actions";
 import { MetadataBadge, MetadataRow } from "./metadata-block";
-import { CopyField } from "./copy-field";
+import { CopyEventButton } from "./copy-event-button";
 
 type Values = {
   event: CalendarEvent;
@@ -91,13 +91,30 @@ export function PublishedFieldsEditor({
   const values: Values = { event, parsed };
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-1 rounded-lg border bg-card p-3 sm:grid-cols-2">
-        <DateTimeEditor values={values} />
-        <LocationEditor values={values} />
-        <AudienceEditor values={values} />
-        <GenderEditor values={values} />
-        <RegistrationEditor values={values} />
-        <TagsEditor values={values} />
+      <div className="relative rounded-lg border bg-card p-3">
+        <CopyEventButton
+          event={{
+            title: event.title,
+            starts_at: event.starts_at,
+            ends_at: event.ends_at,
+            all_day: event.all_day,
+            location: event.location,
+            audience: parsed.audience,
+            gender: parsed.gender,
+            free_tags: parsed.tags,
+            registration_url: parsed.registration_url,
+            description: parsed.description,
+          }}
+          className="absolute right-2 top-2 z-10"
+        />
+        <div className="grid gap-1 pt-7 sm:grid-cols-2 sm:pt-0">
+          <DateTimeEditor values={values} />
+          <LocationEditor values={values} />
+          <AudienceEditor values={values} />
+          <GenderEditor values={values} />
+          <RegistrationEditor values={values} />
+          <TagsEditor values={values} />
+        </div>
       </div>
     </div>
   );
@@ -417,63 +434,9 @@ function RegistrationEditor({ values }: { values: Values }) {
     save({ registration_url: null }, () => setOpen(false));
   }
 
-  if (parsed.registration_url) {
-    return (
-      <div className="flex flex-wrap items-center gap-2 rounded-md px-2 py-1 sm:col-span-2">
-        <CopyField
-          label="Register"
-          value={parsed.registration_url}
-          href={parsed.registration_url}
-        />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className="text-xs"
-        >
-          Edit
-        </Button>
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger nativeButton={false} render={<span className="hidden" />} />
-          <DropdownMenuContent align="end" className="w-80 p-3">
-            <div
-              className="flex flex-col gap-2"
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <Label htmlFor={`preg-${event.id}`}>Registration URL</Label>
-              <Input
-                id={`preg-${event.id}`}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="https://forms.gle/…"
-                autoFocus
-                type="url"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    commit();
-                  }
-                }}
-              />
-              <div className="flex justify-between gap-1 pt-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clear}
-                  disabled={pending}
-                >
-                  <X className="size-3.5" aria-hidden /> Clear
-                </Button>
-                <Button size="sm" onClick={commit} disabled={pending}>
-                  Save
-                </Button>
-              </div>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  }
+  const displayValue = parsed.registration_url
+    ? parsed.registration_url.replace(/^https?:\/\//, "")
+    : null;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -486,7 +449,7 @@ function RegistrationEditor({ values }: { values: Values }) {
             <MetadataRow
               Icon={LinkIcon}
               label="Register"
-              value={null}
+              value={displayValue}
               placeholder="+ Add registration link"
             />
           </button>
@@ -512,8 +475,18 @@ function RegistrationEditor({ values }: { values: Values }) {
               }
             }}
           />
-          <div className="flex justify-end pt-1">
-            <Button size="sm" onClick={commit} disabled={pending}>
+          <div className="flex justify-between gap-1 pt-1">
+            {parsed.registration_url && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clear}
+                disabled={pending}
+              >
+                <X className="size-3.5" aria-hidden /> Clear
+              </Button>
+            )}
+            <Button size="sm" className="ml-auto" onClick={commit} disabled={pending}>
               Save
             </Button>
           </div>

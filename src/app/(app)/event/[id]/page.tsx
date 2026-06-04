@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronLeft, ExternalLink } from "lucide-react";
-import { CopyField } from "./copy-field";
-import { MetadataGrid } from "./metadata-block";
+import { ChevronLeft, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { MetadataGrid, MetadataRow } from "./metadata-block";
+import { CopyEventButton } from "./copy-event-button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
@@ -279,9 +279,10 @@ export default async function EventDetailPage({
             {canWrite ? (
               <PublishedFieldsEditor event={event} parsed={parsed} />
             ) : (
-              <div className="rounded-lg border bg-card p-3">
-                <MetadataGrid
-                  values={{
+              <div className="relative rounded-lg border bg-card p-3">
+                <CopyEventButton
+                  event={{
+                    title: event.title,
                     starts_at: event.starts_at,
                     ends_at: event.ends_at,
                     all_day: event.all_day,
@@ -289,17 +290,31 @@ export default async function EventDetailPage({
                     audience: parsed.audience,
                     gender: parsed.gender,
                     free_tags: parsed.tags,
+                    registration_url: parsed.registration_url,
+                    description: parsed.description,
                   }}
+                  className="absolute right-2 top-2 z-10"
                 />
-                {parsed.registration_url && (
-                  <div className="mt-2">
-                    <CopyField
+                <div className="pt-7 sm:pt-0">
+                  <MetadataGrid
+                    values={{
+                      starts_at: event.starts_at,
+                      ends_at: event.ends_at,
+                      all_day: event.all_day,
+                      location: event.location,
+                      audience: parsed.audience,
+                      gender: parsed.gender,
+                      free_tags: parsed.tags,
+                    }}
+                  />
+                  {parsed.registration_url && (
+                    <MetadataRow
+                      Icon={LinkIcon}
                       label="Register"
-                      value={parsed.registration_url}
-                      href={parsed.registration_url}
+                      value={parsed.registration_url.replace(/^https?:\/\//, "")}
                     />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 
