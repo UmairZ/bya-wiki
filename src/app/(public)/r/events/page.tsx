@@ -179,7 +179,7 @@ export default async function PublicEventsPage() {
                     />
                     {/* Floating date chip in top-left — readable on any flyer
                         color via the white background + ring. */}
-                    <div className="absolute left-3 top-3 flex flex-col items-center rounded-lg bg-background/95 px-2.5 py-1.5 shadow-md ring-1 ring-foreground/10 backdrop-blur">
+                    <div className="absolute left-3 top-3 flex flex-col items-center rounded-lg bg-background/70 px-2.5 py-1.5 shadow-md ring-1 ring-foreground/10 backdrop-blur-md">
                       <span className="text-[10px] font-bold uppercase leading-none tracking-wider text-primary">
                         {formatMonthShort(t.starts_at)}
                       </span>
