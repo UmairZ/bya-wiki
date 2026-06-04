@@ -16,6 +16,7 @@ import type {
   TaskRow,
 } from "@/lib/supabase/types";
 import { EventDetailActions } from "./event-detail-actions";
+import { EventFlyerEditor } from "./event-flyer-editor";
 import { TaskKanban } from "./task-kanban";
 import { TaskSectionHeader } from "./task-section-header";
 import { ClearTasksMenu } from "./clear-tasks-menu";
@@ -64,6 +65,17 @@ async function loadTasksFor(
     .eq("target_ref", targetRef)
     .order("sort_order", { ascending: true });
   return (data ?? []) as TaskRow[];
+}
+
+async function loadEventFlyerPath(eventRef: string): Promise<string | null> {
+  const supabase = await createSupabaseServerClient();
+  const uid = eventRef.split("::")[0];
+  const { data } = await supabase
+    .from("event_flyers")
+    .select("flyer_storage_path")
+    .eq("google_event_uid", uid)
+    .maybeSingle();
+  return data?.flyer_storage_path ?? null;
 }
 
 async function loadActiveMembers(): Promise<MemberSummary[]> {
@@ -144,16 +156,25 @@ export default async function EventDetailPage({
   }
 
   // 2) Published event flow.
-  const [icsUrl, googleStatus, current, stages, tasks, templates, members] =
-    await Promise.all([
-      getIcsUrl(),
-      getConnectionStatus(),
-      getCurrentUser(),
-      loadStages(),
-      loadTasksFor(eventId, "event"),
-      loadActiveTemplates(),
-      loadActiveMembers(),
-    ]);
+  const [
+    icsUrl,
+    googleStatus,
+    current,
+    stages,
+    tasks,
+    templates,
+    members,
+    flyerPath,
+  ] = await Promise.all([
+    getIcsUrl(),
+    getConnectionStatus(),
+    getCurrentUser(),
+    loadStages(),
+    loadTasksFor(eventId, "event"),
+    loadActiveTemplates(),
+    loadActiveMembers(),
+    loadEventFlyerPath(eventId),
+  ]);
 
   if (!icsUrl) notFound();
 
@@ -290,6 +311,8 @@ export default async function EventDetailPage({
             {parsed.description}
           </p>
         )}
+
+        <EventFlyerEditor eventRef={event.id} flyerStoragePath={flyerPath} />
       </header>
 
       <section aria-label="Tasks" className="flex flex-col gap-3">

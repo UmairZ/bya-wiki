@@ -30,6 +30,7 @@ import type {
   TaskRow,
 } from "@/lib/supabase/types";
 import { DraftFieldsEditor } from "./draft-fields-editor";
+import { DraftFlyerEditor } from "./draft-flyer-editor";
 import { DraftTaskList } from "./draft-task-list";
 import { TaskSectionHeader } from "./task-section-header";
 import { ClearTasksMenu } from "./clear-tasks-menu";
@@ -105,6 +106,7 @@ export function DraftView({
   if (!draft.audience) missing.push("audience");
   if (!draft.gender) missing.push("gender");
   if (!draft.registration_url?.trim()) missing.push("registration link");
+  if (!draft.flyer_storage_path) missing.push("flyer");
   const canPublish = missing.length === 0;
 
   // Drafts only ever have Drafts-stage tasks (the first stage). Fall back
@@ -211,6 +213,11 @@ export function DraftView({
       </header>
 
       <DraftFieldsEditor draft={draft} />
+
+      <DraftFlyerEditor
+        draftId={draft.id}
+        flyerStoragePath={draft.flyer_storage_path}
+      />
 
       <section aria-label="Tasks" className="flex flex-col gap-3">
         <div className="flex items-end justify-between gap-2">

@@ -455,6 +455,7 @@ export type DraftEventRow = {
   audience: AudienceTag | null;
   gender: GenderTag | null;
   free_tags: string[];
+  flyer_storage_path: string | null;
   archived: boolean;
   created_by: string | null;
   created_at: string;
@@ -473,6 +474,7 @@ export type DraftEventInsert = {
   audience?: AudienceTag | null;
   gender?: GenderTag | null;
   free_tags?: string[];
+  flyer_storage_path?: string | null;
   archived?: boolean;
   created_by?: string | null;
 };
@@ -488,7 +490,31 @@ export type DraftEventUpdate = {
   audience?: AudienceTag | null;
   gender?: GenderTag | null;
   free_tags?: string[];
+  flyer_storage_path?: string | null;
   archived?: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// event_flyers
+// ---------------------------------------------------------------------------
+
+export type EventFlyerRow = {
+  google_event_uid: string;
+  flyer_storage_path: string;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EventFlyerInsert = {
+  google_event_uid: string;
+  flyer_storage_path: string;
+  uploaded_by?: string | null;
+};
+
+export type EventFlyerUpdate = {
+  flyer_storage_path?: string;
+  uploaded_by?: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -574,6 +600,12 @@ export type Database = {
         Row: DraftEventRow;
         Insert: DraftEventInsert;
         Update: DraftEventUpdate;
+        Relationships: [];
+      };
+      event_flyers: {
+        Row: EventFlyerRow;
+        Insert: EventFlyerInsert;
+        Update: EventFlyerUpdate;
         Relationships: [];
       };
     };

@@ -4,10 +4,16 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   createEvent,
   getConnectionStatus,
 } from "@/lib/calendar/google";
+import {
+  buildFlyerPath,
+  deleteFlyer,
+  uploadFlyer,
+} from "@/lib/flyer-storage";
 import type {
   AudienceTag,
   DraftEventRow,
@@ -156,6 +162,13 @@ export async function deleteDraftAction(
   await requireCurrentUser();
   const supabase = await createSupabaseServerClient();
 
+  // Look up the flyer first so we can clean up its bytes.
+  const { data: existing } = await supabase
+    .from("draft_events")
+    .select("flyer_storage_path")
+    .eq("id", draftId)
+    .single();
+
   // Tasks attached to this draft are owned by it — cascade-delete them.
   await supabase
     .from("tasks")
@@ -169,6 +182,14 @@ export async function deleteDraftAction(
     .eq("id", draftId);
   if (error) return { ok: false, error: error.message };
 
+  if (existing?.flyer_storage_path) {
+    try {
+      await deleteFlyer(existing.flyer_storage_path);
+    } catch {
+      /* non-fatal */
+    }
+  }
+
   revalidatePath("/events");
   return { ok: true, data: null };
 }
@@ -179,7 +200,12 @@ export async function deleteDraftAction(
 
 export type PublishValidationError = {
   missing: Array<
-    "date" | "location" | "audience" | "gender" | "registration link"
+    | "date"
+    | "location"
+    | "audience"
+    | "gender"
+    | "registration link"
+    | "flyer"
   >;
 };
 
@@ -192,7 +218,109 @@ function validateForPublish(draft: DraftEventRow): PublishValidationError | null
   if (!draft.registration_url || !draft.registration_url.trim()) {
     missing.push("registration link");
   }
+  if (!draft.flyer_storage_path) missing.push("flyer");
   return missing.length > 0 ? { missing } : null;
+}
+
+// ---------------------------------------------------------------------------
+// Flyer upload (draft)
+// ---------------------------------------------------------------------------
+
+export async function uploadDraftFlyerAction(
+  draftId: string,
+  formData: FormData,
+): Promise<ActionResult<{ path: string }>> {
+  await requireCurrentUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Pick an image file." };
+  }
+  if (!file.type.startsWith("image/")) {
+    return { ok: false, error: "File must be an image." };
+  }
+  // 5 MB cap is plenty for a flyer.
+  if (file.size > 5 * 1024 * 1024) {
+    return { ok: false, error: "Flyer must be 5 MB or smaller." };
+  }
+
+  // Convert to Uint8Array — File doesn't round-trip cleanly across the
+  // action boundary into the Supabase Storage SDK.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const storagePath = buildFlyerPath({
+    ownerPrefix: "draft",
+    ownerId: draftId,
+    originalName: file.name,
+  });
+
+  try {
+    await uploadFlyer({
+      path: storagePath,
+      body: bytes,
+      contentType: file.type,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  // Look up the old path (if any) so we can clean up old bytes after the
+  // pointer flips.
+  const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from("draft_events")
+    .select("flyer_storage_path")
+    .eq("id", draftId)
+    .single();
+
+  const { error: updateErr } = await supabase
+    .from("draft_events")
+    .update({ flyer_storage_path: storagePath })
+    .eq("id", draftId);
+  if (updateErr) {
+    return { ok: false, error: updateErr.message };
+  }
+
+  if (existing?.flyer_storage_path) {
+    // Best-effort cleanup; non-fatal.
+    try {
+      await deleteFlyer(existing.flyer_storage_path);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  revalidatePath(`/event/${encodeURIComponent(draftId)}`);
+  return { ok: true, data: { path: storagePath } };
+}
+
+export async function removeDraftFlyerAction(
+  draftId: string,
+): Promise<ActionResult> {
+  await requireCurrentUser();
+  const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from("draft_events")
+    .select("flyer_storage_path")
+    .eq("id", draftId)
+    .single();
+  if (!existing?.flyer_storage_path) return { ok: true, data: null };
+
+  const { error } = await supabase
+    .from("draft_events")
+    .update({ flyer_storage_path: null })
+    .eq("id", draftId);
+  if (error) return { ok: false, error: error.message };
+
+  try {
+    await deleteFlyer(existing.flyer_storage_path);
+  } catch {
+    /* ignore — pointer already cleared */
+  }
+
+  revalidatePath(`/event/${encodeURIComponent(draftId)}`);
+  return { ok: true, data: null };
 }
 
 export async function publishDraftAction(
@@ -248,6 +376,16 @@ export async function publishDraftAction(
   }
 
   const googleEventUid = `${created.id}@google.com`;
+
+  // Transfer the flyer from draft_events → event_flyers (keyed by GCal UID
+  // since the draft row is about to be deleted).
+  if (draft.flyer_storage_path) {
+    await supabase.from("event_flyers").upsert({
+      google_event_uid: googleEventUid,
+      flyer_storage_path: draft.flyer_storage_path,
+      uploaded_by: draft.created_by,
+    });
+  }
 
   // Transfer any tasks pointed at the draft over to the Google event UID.
   // Includes Drafts-stage tasks and any post-pub tasks that were already

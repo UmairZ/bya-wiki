@@ -13,6 +13,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set<string>(["/login"]);
 
+/** Path prefixes that don't require authentication — public-facing surfaces
+ *  reachable from bit.ly / socials / link-in-bio. */
+const PUBLIC_PREFIXES = ["/r/"];
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -46,7 +50,11 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && !PUBLIC_PATHS.has(pathname)) {
+  const isPublic =
+    PUBLIC_PATHS.has(pathname) ||
+    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     if (pathname !== "/") {

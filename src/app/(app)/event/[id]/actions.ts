@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  buildFlyerPath,
+  deleteFlyer,
+  uploadFlyer,
+} from "@/lib/flyer-storage";
 import type { TaskInsert, TaskStatus, TaskUpdate } from "@/lib/supabase/types";
 
 export type ActionResult<T = null> =
@@ -260,6 +265,115 @@ export async function setTaskDueAction(
   if (error) return { ok: false, error: error.message };
 
   revalidateEventDetail(targetRef);
+  return { ok: true, data: null };
+}
+
+// ---------------------------------------------------------------------------
+// Flyer (published event)
+//
+// The event_flyers table is keyed by the base Google event UID
+// (`<uid>@google.com`, no `::<iso>` suffix). Recurring event instances all
+// share the same master UID's flyer.
+// ---------------------------------------------------------------------------
+
+function baseGoogleUid(eventRef: string): string {
+  return eventRef.split("::")[0];
+}
+
+export async function uploadEventFlyerAction(
+  eventRef: string,
+  formData: FormData,
+): Promise<ActionResult<{ path: string }>> {
+  const { profile } = await requireCurrentUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Pick an image file." };
+  }
+  if (!file.type.startsWith("image/")) {
+    return { ok: false, error: "File must be an image." };
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return { ok: false, error: "Flyer must be 5 MB or smaller." };
+  }
+
+  const uid = baseGoogleUid(eventRef);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const storagePath = buildFlyerPath({
+    ownerPrefix: "event",
+    ownerId: uid,
+    originalName: file.name,
+  });
+
+  try {
+    await uploadFlyer({
+      path: storagePath,
+      body: bytes,
+      contentType: file.type,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from("event_flyers")
+    .select("flyer_storage_path")
+    .eq("google_event_uid", uid)
+    .maybeSingle();
+
+  const { error } = await supabase.from("event_flyers").upsert({
+    google_event_uid: uid,
+    flyer_storage_path: storagePath,
+    uploaded_by: profile.id,
+  });
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  if (existing?.flyer_storage_path) {
+    try {
+      await deleteFlyer(existing.flyer_storage_path);
+    } catch {
+      /* non-fatal */
+    }
+  }
+
+  revalidatePath(`/event/${encodeURIComponent(eventRef)}`);
+  revalidatePath("/r/events");
+  return { ok: true, data: { path: storagePath } };
+}
+
+export async function removeEventFlyerAction(
+  eventRef: string,
+): Promise<ActionResult> {
+  await requireCurrentUser();
+  const uid = baseGoogleUid(eventRef);
+  const supabase = await createSupabaseServerClient();
+
+  const { data: existing } = await supabase
+    .from("event_flyers")
+    .select("flyer_storage_path")
+    .eq("google_event_uid", uid)
+    .maybeSingle();
+  if (!existing) return { ok: true, data: null };
+
+  const { error } = await supabase
+    .from("event_flyers")
+    .delete()
+    .eq("google_event_uid", uid);
+  if (error) return { ok: false, error: error.message };
+
+  try {
+    await deleteFlyer(existing.flyer_storage_path);
+  } catch {
+    /* non-fatal */
+  }
+
+  revalidatePath(`/event/${encodeURIComponent(eventRef)}`);
+  revalidatePath("/r/events");
   return { ok: true, data: null };
 }
 
