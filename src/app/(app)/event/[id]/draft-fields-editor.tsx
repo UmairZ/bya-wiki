@@ -158,13 +158,12 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
           render={
-            <button type="button" className="block w-full text-left">
+            <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
               <MetadataRow
                 Icon={CalendarDays}
                 label="Date"
                 value={dateLabel}
                 placeholder="+ Add date"
-                onClick={() => setOpen(true)}
               />
             </button>
           }
@@ -252,13 +251,12 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full text-left">
+          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={MapPin}
               label="Location"
               value={draft.location}
               placeholder="+ Add location"
-              onClick={() => setOpen(true)}
             />
           </button>
         }
@@ -310,14 +308,13 @@ function AudienceEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full text-left">
+          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={Users}
               label="Audience"
               value={draft.audience}
               placeholder="+ Set audience"
               highlight={Boolean(draft.audience)}
-              onClick={() => {}}
             />
           </button>
         }
@@ -355,14 +352,13 @@ function GenderEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full text-left">
+          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={Users}
               label="Gender"
               value={draft.gender}
               placeholder="+ Set gender"
               highlight={Boolean(draft.gender)}
-              onClick={() => {}}
             />
           </button>
         }
@@ -467,13 +463,12 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full text-left">
+          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <MetadataRow
               Icon={LinkIcon}
               label="Register"
               value={null}
               placeholder="+ Add registration link"
-              onClick={() => setOpen(true)}
             />
           </button>
         }
@@ -530,7 +525,7 @@ function TagsEditor({ draft }: { draft: DraftEventRow }) {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <button type="button" className="block w-full text-left">
+          <button type="button" className="block w-full rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
             <div className="flex items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-muted/50">
               <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
               <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
