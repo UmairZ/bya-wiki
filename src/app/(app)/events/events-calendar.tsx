@@ -138,7 +138,27 @@ export function EventsCalendar({
               >
                 {d.getDate()}
               </span>
-              <ul className="flex flex-col gap-0.5">
+
+              {/* Mobile: compact dot row — full chips don't fit at 390px wide.
+                  Tap the day to scroll into the All Events list below. */}
+              {dayEvents.length > 0 && (
+                <div className="flex flex-wrap items-center gap-0.5 self-start sm:hidden">
+                  {dayEvents.slice(0, 4).map((e) => (
+                    <span
+                      key={e.id}
+                      aria-hidden
+                      className="size-1.5 rounded-full bg-primary/70"
+                    />
+                  ))}
+                  {dayEvents.length > 4 && (
+                    <span className="text-[9px] leading-none text-muted-foreground">
+                      +{dayEvents.length - 4}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <ul className="hidden flex-col gap-0.5 sm:flex">
                 {dayEvents.slice(0, 3).map((e) => {
                   const compactTime = e.all_day
                     ? null

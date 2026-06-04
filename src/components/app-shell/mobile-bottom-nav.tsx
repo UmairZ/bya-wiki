@@ -44,12 +44,18 @@ export function MobileBottomNav() {
                   prefetch
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-2 py-1.5 text-xs font-medium transition-colors",
+                    "relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-2 py-1.5 text-xs font-medium transition-colors",
                     active
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-primary"
+                    />
+                  )}
                   <Icon
                     className={cn("size-5", active && "stroke-[2.25]")}
                     aria-hidden
@@ -63,7 +69,7 @@ export function MobileBottomNav() {
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className="flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:text-foreground"
+              className="relative flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:text-foreground"
             >
               <Menu className="size-5" aria-hidden />
               <span>More</span>
