@@ -84,8 +84,11 @@ export type GetCalendarEventsOptions = {
  */
 async function fetchAndParseCalendar({
   icsUrl,
-  pastWindowDays = 60,
-  futureWindowDays = 180,
+  // Wider default window so the calendar view can navigate a year either
+  // direction without re-fetching. node-ical handles thousands of events
+  // fine, and unstable_cache means we only parse once per 15-min window.
+  pastWindowDays = 365,
+  futureWindowDays = 365,
 }: GetCalendarEventsOptions): Promise<CalendarEvent[]> {
   const response = await fetch(icsUrl, {
     // 15-minute edge cache, busted via revalidateTag('calendar') after the
@@ -180,8 +183,8 @@ export async function getCalendarEvents(
 ): Promise<CalendarEvent[]> {
   return cachedFetchAndParse(
     options.icsUrl,
-    options.pastWindowDays ?? 60,
-    options.futureWindowDays ?? 180,
+    options.pastWindowDays ?? 365,
+    options.futureWindowDays ?? 365,
   );
 }
 

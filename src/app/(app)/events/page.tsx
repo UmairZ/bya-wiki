@@ -9,7 +9,7 @@ import { getConnectionStatus } from "@/lib/calendar/google";
 import type { CalendarEvent } from "@/lib/calendar/types";
 import type { DraftEventRow, EventStageRow } from "@/lib/supabase/types";
 import { EventsKanban, type Stage } from "./events-kanban";
-import { PastEventsSection } from "./past-events-section";
+import { AllEventsSection } from "./all-events-section";
 import { NewEventButton } from "./new-event-button";
 import {
   enrichDrafts,
@@ -124,7 +124,7 @@ export default async function EventsPage() {
 
   const enriched = enrichEvents(events, allTasks, fullStages);
   const enrichedDrafts = enrichDrafts(drafts, allTasks);
-  const { kanban, past } = splitForEventsPage(enriched);
+  const { kanban } = splitForEventsPage(enriched);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
@@ -204,7 +204,7 @@ export default async function EventsPage() {
         />
       </section>
 
-      <PastEventsSection events={past} />
+      <AllEventsSection events={events} />
     </div>
   );
 }

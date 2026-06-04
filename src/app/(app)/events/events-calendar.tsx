@@ -1,0 +1,166 @@
+"use client";
+
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { encodeEventHref } from "@/lib/calendar/event-href";
+import type { CalendarEvent } from "@/lib/calendar/types";
+
+/** Month grid with prev/next navigation. Renders event chips on their start
+ *  date. Click a chip to navigate to the event detail. */
+export function EventsCalendar({
+  events,
+  displayedMonth,
+  onMonthChange,
+}: {
+  /** Events whose start_at falls within the currently-displayed month. */
+  events: CalendarEvent[];
+  /** First-of-month Date for the currently displayed month. */
+  displayedMonth: Date;
+  onMonthChange: (next: Date) => void;
+}) {
+  const year = displayedMonth.getFullYear();
+  const month = displayedMonth.getMonth();
+  const today = new Date();
+  const todayKey = isoDate(today);
+
+  // Build a 6-week grid starting from the Sunday on or before the 1st.
+  const firstOfMonth = new Date(year, month, 1);
+  const gridStart = new Date(year, month, 1);
+  gridStart.setDate(1 - firstOfMonth.getDay());
+
+  const days: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    days.push(d);
+  }
+
+  // Bucket events by their start date.
+  const byDay = new Map<string, CalendarEvent[]>();
+  for (const e of events) {
+    const key = isoDate(new Date(e.starts_at));
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key)!.push(e);
+  }
+  for (const list of byDay.values()) {
+    list.sort(
+      (a, b) =>
+        new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+    );
+  }
+
+  const monthLabel = displayedMonth.toLocaleString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+
+  function jump(deltaMonths: number) {
+    const next = new Date(year, month + deltaMonths, 1);
+    onMonthChange(next);
+  }
+
+  function goToday() {
+    onMonthChange(new Date(today.getFullYear(), today.getMonth(), 1));
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
+      <header className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold tracking-tight">{monthLabel}</h3>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToday}
+            className="h-8 px-2 text-xs"
+          >
+            Today
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => jump(-1)}
+            aria-label="Previous month"
+            className="size-8"
+          >
+            <ChevronLeft className="size-4" aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => jump(1)}
+            aria-label="Next month"
+            className="size-8"
+          >
+            <ChevronRight className="size-4" aria-hidden />
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-md bg-border text-xs">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+          <div
+            key={d}
+            className="bg-muted/40 px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            {d}
+          </div>
+        ))}
+        {days.map((d) => {
+          const key = isoDate(d);
+          const isOtherMonth = d.getMonth() !== month;
+          const isToday = key === todayKey;
+          const dayEvents = byDay.get(key) ?? [];
+          return (
+            <div
+              key={key}
+              className={cn(
+                "flex min-h-[72px] flex-col gap-0.5 bg-card p-1 align-top md:min-h-[88px]",
+                isOtherMonth && "bg-muted/20",
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-flex size-5 items-center justify-center self-start rounded-full text-[10px] font-semibold",
+                  isToday && "bg-primary text-primary-foreground",
+                  !isToday && isOtherMonth && "text-muted-foreground/50",
+                  !isToday && !isOtherMonth && "text-foreground/80",
+                )}
+              >
+                {d.getDate()}
+              </span>
+              <ul className="flex flex-col gap-0.5">
+                {dayEvents.slice(0, 3).map((e) => (
+                  <li key={e.id}>
+                    <Link
+                      href={encodeEventHref(e.id)}
+                      prefetch
+                      className="block truncate rounded bg-brand-tint px-1 py-0.5 text-[10px] font-medium text-brand-tint-foreground transition-colors hover:bg-brand-tint/80"
+                      title={e.title}
+                    >
+                      {e.title}
+                    </Link>
+                  </li>
+                ))}
+                {dayEvents.length > 3 && (
+                  <li className="px-1 text-[9px] text-muted-foreground">
+                    +{dayEvents.length - 3} more
+                  </li>
+                )}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
