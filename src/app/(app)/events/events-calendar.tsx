@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { encodeEventHref } from "@/lib/calendar/event-href";
 import {
   formatMonthLong,
+  formatTime,
   isoDateInOrgTz,
 } from "@/lib/date-time";
 import type { CalendarEvent } from "@/lib/calendar/types";
@@ -138,21 +139,35 @@ export function EventsCalendar({
                 {d.getDate()}
               </span>
               <ul className="flex flex-col gap-0.5">
-                {dayEvents.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    <Link
-                      href={encodeEventHref(e.id)}
-                      prefetch
-                      onClick={(ev) => ev.stopPropagation()}
-                      className="block truncate rounded bg-brand-tint px-1 py-0.5 text-[10px] font-medium text-brand-tint-foreground transition-colors hover:bg-brand-tint/80"
-                      title={e.title}
-                    >
-                      {e.title}
-                    </Link>
-                  </li>
-                ))}
+                {dayEvents.slice(0, 3).map((e) => {
+                  const compactTime = e.all_day
+                    ? null
+                    : formatTime(e.starts_at)
+                        .replace(/\s*[AP]M$/i, (m) => m.trim().toLowerCase()[0])
+                        .replace(/:00/, "");
+                  return (
+                    <li key={e.id}>
+                      <Link
+                        href={encodeEventHref(e.id)}
+                        prefetch
+                        onClick={(ev) => ev.stopPropagation()}
+                        className="flex items-center gap-1 truncate rounded border-l-2 border-l-primary/60 bg-brand-tint px-1.5 py-0.5 text-[10px] font-medium leading-tight text-brand-tint-foreground transition-colors hover:bg-brand-tint/80 hover:border-l-primary"
+                        title={
+                          compactTime ? `${compactTime} · ${e.title}` : e.title
+                        }
+                      >
+                        {compactTime && (
+                          <span className="shrink-0 tabular-nums text-[9px] font-semibold text-primary/80">
+                            {compactTime}
+                          </span>
+                        )}
+                        <span className="truncate">{e.title}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
                 {dayEvents.length > 3 && (
-                  <li className="px-1 text-[9px] text-muted-foreground">
+                  <li className="px-1 text-[9px] font-medium text-muted-foreground">
                     +{dayEvents.length - 3} more
                   </li>
                 )}
