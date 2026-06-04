@@ -264,19 +264,7 @@ export default async function EventDetailPage({
           <EventDetailActions
             canWrite={canWrite}
             googleEventId={googleEventId}
-            event={{
-              eventId: googleEventId,
-              title: event.title,
-              description: parsed.description,
-              location: event.location ?? "",
-              registration_url: parsed.registration_url ?? "",
-              tags: parsed.tags,
-              audience: parsed.audience,
-              gender: parsed.gender,
-              starts_at: event.starts_at,
-              ends_at: event.ends_at,
-              all_day: event.all_day,
-            }}
+            eventTitle={event.title}
           />
         </div>
 

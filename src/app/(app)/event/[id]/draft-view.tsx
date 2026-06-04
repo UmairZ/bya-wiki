@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import {
   AlertTriangle,
   ChevronLeft,
+  HelpCircle,
   MoreHorizontal,
   Send,
   Trash2,
@@ -236,19 +237,21 @@ export function DraftView({
 
       <section aria-label="Tasks" className="flex flex-col gap-3">
         <div className="flex items-end justify-between gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <h2
+            className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-muted-foreground"
+            title="Playbooks apply after publishing — drafts only have ad-hoc tasks."
+          >
             Tasks
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground/70">
-              Playbooks apply after publishing.
-            </span>
-            <ClearTasksMenu
-              targetKind="draft"
-              targetRef={draft.id}
-              taskCount={tasks.length}
+            <HelpCircle
+              className="size-3 text-muted-foreground/60"
+              aria-hidden
             />
-          </div>
+          </h2>
+          <ClearTasksMenu
+            targetKind="draft"
+            targetRef={draft.id}
+            taskCount={tasks.length}
+          />
         </div>
 
         <TaskSectionHeader

@@ -3,6 +3,7 @@
 import { AlertTriangle, CalendarDays, Clock, MapPin, Tag, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatFullDateString, formatTime } from "@/lib/date-time";
+import { Pill } from "@/components/ui/pill";
 import type { AudienceTag, GenderTag } from "@/lib/supabase/types";
 
 export type MetadataValues = {
@@ -132,22 +133,9 @@ export function MetadataBadge({
   label: string;
   tone: "audience" | "gender" | "tag";
 }) {
-  const toneCls =
-    tone === "audience"
-      ? "bg-brand-tint text-brand-tint-foreground"
-      : tone === "gender"
-        ? "bg-primary/10 text-primary"
-        : "bg-muted text-muted-foreground";
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-        toneCls,
-      )}
-    >
-      {label}
-    </span>
-  );
+  const pillTone =
+    tone === "audience" ? "accent" : tone === "gender" ? "info" : "neutral";
+  return <Pill tone={pillTone}>{label}</Pill>;
 }
 
 export function MetadataGrid({

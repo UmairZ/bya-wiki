@@ -52,15 +52,8 @@ export default async function PlaybooksAdminPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">Playbooks</h1>
-          <p className="text-sm text-muted-foreground">
-            Reusable checklists. Apply one to an event and it becomes a live
-            workflow — edits to the template don&apos;t reach already-applied
-            workflows.
-          </p>
-        </div>
+      <header className="flex items-end justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Playbooks</h1>
         {!missing && <CreateTemplateButton />}
       </header>
 

@@ -8,6 +8,7 @@ import {
 } from "@/lib/date-time";
 import { parseDescription } from "@/lib/calendar/markers";
 import { encodeEventHref } from "@/lib/calendar/event-href";
+import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
 import type { EnrichedDraft, EnrichedEvent } from "./workflow-state";
 import { AddDraftComposer } from "./add-draft-composer";
@@ -98,13 +99,13 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
           <div className="flex items-start gap-1">
             <h3 className="truncate text-sm font-medium flex-1">{event.title}</h3>
             {overdueCount > 0 && (
-              <span
-                className="flex items-center gap-0.5 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[9px] font-semibold text-destructive"
+              <Pill
+                tone="destructive"
                 title={`${overdueCount} overdue task${overdueCount === 1 ? "" : "s"}`}
               >
-                <AlertCircle className="size-2.5" aria-hidden />
+                <AlertCircle />
                 {overdueCount}
-              </span>
+              </Pill>
             )}
           </div>
           <p className="truncate text-xs text-muted-foreground">
@@ -121,11 +122,8 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
       {parsed.tags.length > 0 && (
         <ul className="flex flex-wrap gap-1">
           {parsed.tags.slice(0, 3).map((tag) => (
-            <li
-              key={tag}
-              className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              {tag}
+            <li key={tag}>
+              <Pill tone="neutral">{tag}</Pill>
             </li>
           ))}
         </ul>
@@ -149,28 +147,46 @@ function DraftCard({ enriched }: { enriched: EnrichedDraft }) {
       href={`/event/${encodeURIComponent(draft.id)}`}
       prefetch
       className={cn(
-        "group flex flex-col gap-1.5 rounded-md border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        // Dashed border + muted date badge = the "this is a draft" visual
+        // signal. Cleaner than a "DRF" abbreviation.
+        "group flex flex-col gap-1.5 rounded-md border border-dashed bg-card p-3 transition-colors hover:border-primary/40 hover:border-solid hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         overdueCount > 0 && "border-destructive/40",
       )}
     >
       <div className="flex items-start gap-2">
         <div
-          className="flex size-9 shrink-0 flex-col items-center justify-center rounded-md bg-muted text-muted-foreground"
+          className={cn(
+            "flex size-9 shrink-0 flex-col items-center justify-center rounded-md text-center",
+            draft.starts_at
+              ? "bg-muted text-muted-foreground"
+              : "bg-transparent text-muted-foreground/40 ring-1 ring-dashed ring-muted-foreground/30",
+          )}
           aria-hidden
         >
-          <span className="text-[10px] font-semibold uppercase">DRF</span>
+          {draft.starts_at ? (
+            <>
+              <span className="text-[10px] font-semibold uppercase">
+                {formatMonthShort(draft.starts_at)}
+              </span>
+              <span className="text-sm font-bold leading-none">
+                {dayOfMonthInOrgTz(draft.starts_at)}
+              </span>
+            </>
+          ) : (
+            <span className="text-[10px] font-semibold uppercase">TBD</span>
+          )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start gap-1">
             <h3 className="truncate text-sm font-medium flex-1">{draft.title}</h3>
             {overdueCount > 0 && (
-              <span
-                className="flex items-center gap-0.5 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[9px] font-semibold text-destructive"
+              <Pill
+                tone="destructive"
                 title={`${overdueCount} overdue task${overdueCount === 1 ? "" : "s"}`}
               >
-                <AlertCircle className="size-2.5" aria-hidden />
+                <AlertCircle />
                 {overdueCount}
-              </span>
+              </Pill>
             )}
           </div>
           <p className="truncate text-xs text-muted-foreground">

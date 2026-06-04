@@ -50,11 +50,8 @@ export default async function ResourcesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-col gap-1">
+      <header>
         <h1 className="text-2xl font-semibold tracking-tight">Resources</h1>
-        <p className="text-sm text-muted-foreground">
-          Pages, files, and references organized by space.
-        </p>
       </header>
 
       {spaces.length === 0 ? (

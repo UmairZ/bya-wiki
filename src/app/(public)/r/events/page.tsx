@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+import { ExternalLink } from "lucide-react";
 // eslint-disable-next-line @next/next/no-img-element -- intentional: the
 // lockup logo is small + cached + we want unconstrained aspect ratio
 import { APP_NAME, LOGO_LOCKUP_SRC } from "@/lib/brand";
@@ -128,28 +129,31 @@ export default async function PublicEventsPage() {
                 href={t.registration_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`${t.title} — ${formatMonthDay(t.starts_at)}`}
-                className="group block overflow-hidden rounded-lg ring-1 ring-foreground/10 transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={`${t.title} — ${formatMonthDay(t.starts_at)} — register`}
+                className="group relative block aspect-square overflow-hidden rounded-lg ring-1 ring-foreground/10 shadow-sm transition-all duration-200 hover:scale-[1.03] hover:shadow-lg hover:ring-primary/40 focus-visible:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <div className="relative aspect-square w-full bg-muted">
-                  <Image
-                    src={t.flyer_url}
-                    alt={t.title}
-                    fill
-                    sizes="(min-width: 640px) 384px, 50vw"
-                    className="object-cover transition-transform group-hover:scale-105"
-                    unoptimized
-                  />
-                </div>
+                <Image
+                  src={t.flyer_url}
+                  alt={t.title}
+                  fill
+                  sizes="(min-width: 640px) 384px, 50vw"
+                  className="object-cover"
+                  unoptimized
+                />
+                {/* Subtle always-visible affordance: small icon badge in
+                    the top-right corner. Background ring + bg makes it
+                    readable over any flyer color. Grows on hover. */}
+                <span
+                  className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-background/85 text-foreground/80 shadow-sm ring-1 ring-foreground/10 backdrop-blur transition-all group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground"
+                  aria-hidden
+                >
+                  <ExternalLink className="size-3.5" />
+                </span>
               </a>
             </li>
           ))}
         </ul>
       )}
-
-      <footer className="pt-4 text-center text-xs text-muted-foreground">
-        Tap a flyer to register.
-      </footer>
     </div>
   );
 }

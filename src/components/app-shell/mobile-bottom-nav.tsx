@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
-import { MODULES } from "./nav-items";
+import { COMING_SOON_LABEL, MODULES } from "./nav-items";
 
 const PRIMARY = [
   { href: "/events", label: "Events", Icon: CalendarDays },
@@ -97,9 +98,7 @@ export function MobileBottomNav() {
                 >
                   <m.Icon className="size-4" aria-hidden />
                   <span className="flex-1">{m.label}</span>
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Soon
-                  </span>
+                  <Pill tone="neutral">{COMING_SOON_LABEL}</Pill>
                 </div>
               </li>
             ))}

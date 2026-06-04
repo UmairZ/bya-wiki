@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Plug, RefreshCw } from "lucide-react";
+import { CalendarDays, Plug } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import type { CalendarEvent } from "@/lib/calendar/types";
 import type { DraftEventRow, EventStageRow } from "@/lib/supabase/types";
 import { EventsKanban, type Stage } from "./events-kanban";
 import { AllEventsSection } from "./all-events-section";
-import { NewEventButton } from "./new-event-button";
 import {
   enrichDrafts,
   enrichEvents,
@@ -128,29 +127,8 @@ export default async function EventsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
-          <p className="text-sm text-muted-foreground">
-            {canWrite
-              ? `Cards auto-place by workflow stage. Writes go to "${googleStatus.calendarName ?? "the connected calendar"}".`
-              : "Synced from Google Calendar. Edits happen in Google; cached ~15 min."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {canWrite && <NewEventButton />}
-          {isOwner && (
-            <Button
-              render={<Link href="/admin/integrations" />}
-              nativeButton={false}
-              variant="outline"
-              size="sm"
-            >
-              <RefreshCw className="size-4" aria-hidden />
-              Manage
-            </Button>
-          )}
-        </div>
+      <header className="flex items-end justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
       </header>
 
       {stages.length === 0 && isOwner && (

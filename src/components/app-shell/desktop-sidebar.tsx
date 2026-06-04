@@ -7,9 +7,10 @@ import { useEffect, useState } from "react";
 import { ChevronRight, Inbox, Search } from "lucide-react";
 import { APP_NAME, LOGO_ALT, LOGO_SRC } from "@/lib/brand";
 import { cn } from "@/lib/utils";
-import { MODULES, type Module } from "./nav-items";
+import { COMING_SOON_LABEL, MODULES, type Module } from "./nav-items";
 import { ProfileMenu, type ProfileMenuProps } from "./profile-menu";
 import { CategoryIcon } from "@/components/category-icon";
+import { Pill } from "@/components/ui/pill";
 
 export type SidebarSpace = {
   id: string;
@@ -54,9 +55,7 @@ function ModuleRow({
       >
         <Icon className="size-4" aria-hidden />
         <span className="flex-1">{module.label}</span>
-        <span className="rounded-full bg-sidebar-accent/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          Soon
-        </span>
+        <Pill tone="neutral">{COMING_SOON_LABEL}</Pill>
       </div>
     );
   }

@@ -51,3 +51,5 @@ next-env.d.ts
 /walkthrough-*.png
 /debug-*.png
 /required-fields.png
+/audit-*.png
+/debug-*.png

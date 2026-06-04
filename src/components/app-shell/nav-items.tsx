@@ -7,6 +7,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+// All Soon badges across the sidebar + mobile More sheet use this label
+// so swapping the wording later is a one-line change.
+export const COMING_SOON_LABEL = "Soon";
+
 export type Module = {
   href: string;
   label: string;
