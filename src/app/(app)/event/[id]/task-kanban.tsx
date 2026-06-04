@@ -52,6 +52,9 @@ export function TaskKanban({
           (t) => t.status === "done" || t.status === "skipped",
         ).length;
         const isCurrent = currentStageId === stage.id;
+        const stagePct =
+          list.length === 0 ? 0 : Math.round((doneCount / list.length) * 100);
+        const stageAllDone = list.length > 0 && doneCount === list.length;
         return (
           <section
             key={stage.id}
@@ -61,18 +64,41 @@ export function TaskKanban({
               isCurrent && "border-l-2 border-l-primary",
             )}
           >
-            <div className="flex items-baseline justify-between px-1">
-              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {stage.name}
-                {isCurrent && (
-                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-                    current
-                  </span>
-                )}
-              </h3>
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {doneCount}/{list.length}
-              </span>
+            <div className="flex flex-col gap-1.5 px-1">
+              <div className="flex items-baseline justify-between">
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {stage.name}
+                  {isCurrent && (
+                    <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+                      current
+                    </span>
+                  )}
+                </h3>
+                <span
+                  className={cn(
+                    "text-[10px] font-medium tabular-nums",
+                    stageAllDone ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {doneCount}/{list.length}
+                </span>
+              </div>
+              <div
+                aria-hidden
+                className="h-1 w-full overflow-hidden rounded-full bg-muted/60"
+              >
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-[width] duration-300",
+                    stageAllDone
+                      ? "bg-primary"
+                      : list.length === 0
+                        ? ""
+                        : "bg-primary/60",
+                  )}
+                  style={{ width: `${stagePct}%` }}
+                />
+              </div>
             </div>
 
             <ul className="flex flex-col gap-1.5">
