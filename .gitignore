@@ -49,3 +49,4 @@ next-env.d.ts
 /phase*.png
 /edit-bug-*.png
 /walkthrough-*.png
+/debug-*.png
