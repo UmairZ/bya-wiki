@@ -32,7 +32,7 @@ export function AllEventsSection({ events }: { events: CalendarEvent[] }) {
         All events
       </h2>
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="md:col-span-2">
+        <div className="min-w-0 md:col-span-2">
           <EventsCalendar
             events={monthEvents}
             displayedMonth={displayedMonth}
@@ -40,7 +40,7 @@ export function AllEventsSection({ events }: { events: CalendarEvent[] }) {
             onDayClick={setDraftDate}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <EventsMonthList
             events={monthEvents}
             displayedMonth={displayedMonth}

@@ -33,7 +33,7 @@ export function EventsMonthList({
   const todayKey = isoDateInOrgTz(today);
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3">
       <header className="flex items-baseline justify-between">
         <h3 className="text-sm font-semibold tracking-tight">{monthLabel}</h3>
         <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -85,7 +85,7 @@ export function EventsMonthList({
                       {formatEventWhen(e)}
                     </p>
                     {e.location && (
-                      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <p className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
                         <MapPin className="size-3 shrink-0" aria-hidden />
                         <span className="truncate">{e.location}</span>
                       </p>

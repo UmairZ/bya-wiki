@@ -72,7 +72,7 @@ export function EventsCalendar({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3">
       <header className="flex items-center justify-between">
         <h3 className="text-sm font-semibold tracking-tight">{monthLabel}</h3>
         <div className="flex items-center gap-1">
@@ -105,7 +105,7 @@ export function EventsCalendar({
         </div>
       </header>
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-md bg-border text-xs">
+      <div className="grid w-full grid-cols-[repeat(7,minmax(0,1fr))] gap-px overflow-hidden rounded-md bg-border text-xs">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div
             key={d}
@@ -158,7 +158,7 @@ export function EventsCalendar({
                 </div>
               )}
 
-              <ul className="hidden flex-col gap-0.5 sm:flex">
+              <ul className="hidden min-w-0 flex-col gap-0.5 sm:flex">
                 {dayEvents.slice(0, 3).map((e) => {
                   const compactTime = e.all_day
                     ? null
@@ -202,7 +202,7 @@ export function EventsCalendar({
                 onClick={() => onDayClick!(dayDate)}
                 aria-label={`Create draft for ${dayDate.toLocaleDateString()}`}
                 className={cn(
-                  "group flex min-h-[72px] flex-col gap-0.5 bg-card p-1 text-left align-top transition-colors hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:bg-brand-tint/30 md:min-h-[88px]",
+                  "group flex min-h-[72px] min-w-0 flex-col gap-0.5 overflow-hidden bg-card p-1 text-left align-top transition-colors hover:bg-brand-tint/30 focus-visible:outline-none focus-visible:bg-brand-tint/30 md:min-h-[88px]",
                   isOtherMonth && "bg-muted/20",
                 )}
               >
@@ -214,7 +214,7 @@ export function EventsCalendar({
             <div
               key={key}
               className={cn(
-                "flex min-h-[72px] flex-col gap-0.5 bg-card p-1 align-top md:min-h-[88px]",
+                "flex min-h-[72px] min-w-0 flex-col gap-0.5 overflow-hidden bg-card p-1 align-top md:min-h-[88px]",
                 isOtherMonth && "bg-muted/20",
               )}
             >

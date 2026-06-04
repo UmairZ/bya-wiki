@@ -49,7 +49,7 @@ export default async function AppLayout({
       <DesktopSidebar {...profileProps} spaces={spaces} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar {...profileProps} />
-        <main className="flex-1 pb-[max(env(safe-area-inset-bottom),5rem)] md:pb-0">
+        <main className="min-w-0 flex-1 overflow-x-clip pb-[max(env(safe-area-inset-bottom),5rem)] md:pb-0">
           {children}
         </main>
         <MobileBottomNav />

@@ -96,8 +96,8 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
           </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-start gap-1">
-            <h3 className="truncate text-sm font-medium flex-1">{event.title}</h3>
+          <div className="flex min-w-0 items-start gap-1">
+            <h3 className="min-w-0 flex-1 truncate text-sm font-medium">{event.title}</h3>
             {overdueCount > 0 && (
               <Pill
                 tone="destructive"
@@ -114,8 +114,8 @@ function EventCard({ enriched }: { enriched: EnrichedEvent }) {
         </div>
       </div>
       {event.location && (
-        <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-          <MapPin className="size-3" aria-hidden />
+        <p className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+          <MapPin className="size-3 shrink-0" aria-hidden />
           <span className="truncate">{event.location}</span>
         </p>
       )}
@@ -177,8 +177,8 @@ function DraftCard({ enriched }: { enriched: EnrichedDraft }) {
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-start gap-1">
-            <h3 className="truncate text-sm font-medium flex-1">{draft.title}</h3>
+          <div className="flex min-w-0 items-start gap-1">
+            <h3 className="min-w-0 flex-1 truncate text-sm font-medium">{draft.title}</h3>
             {overdueCount > 0 && (
               <Pill
                 tone="destructive"
@@ -248,7 +248,7 @@ export function EventsKanban({
   });
 
   return (
-    <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid auto-rows-min grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
       {stages.map((stage, idx) => {
         const isDraftsColumn = idx === 0;
         const eventList = buckets.get(stage.id) ?? [];

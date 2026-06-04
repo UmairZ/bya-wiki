@@ -45,7 +45,7 @@ export function TaskKanban({
   const membersById = new Map(members.map((m) => [m.id, m]));
 
   return (
-    <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid auto-rows-min grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
       {stages.map((stage) => {
         const list = byStage.get(stage.id) ?? [];
         const doneCount = list.filter(
