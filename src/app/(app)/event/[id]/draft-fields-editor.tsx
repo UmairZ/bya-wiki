@@ -179,7 +179,10 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
           }
         />
         <DropdownMenuContent align="start" className="w-72 p-3">
-          <div className="flex flex-col gap-2">
+          <div
+            className="flex flex-col gap-2"
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <Label htmlFor={`d-${draft.id}`}>Date</Label>
             <Input
               id={`d-${draft.id}`}
@@ -270,7 +273,12 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
         }
       />
       <DropdownMenuContent align="start" className="w-72 p-3">
-        <div className="flex flex-col gap-2">
+        {/* Stop key events bubbling to the Menu's typeahead so text inputs
+            receive keystrokes normally. */}
+        <div
+          className="flex flex-col gap-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <Label htmlFor={`loc-${draft.id}`}>Location</Label>
           <Input
             id={`loc-${draft.id}`}
@@ -433,7 +441,10 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger render={<span className="hidden" />} />
           <DropdownMenuContent align="end" className="w-80 p-3">
-            <div className="flex flex-col gap-2">
+            <div
+              className="flex flex-col gap-2"
+              onKeyDown={(e) => e.stopPropagation()}
+            >
               <Label htmlFor={`reg-${draft.id}`}>Registration URL</Label>
               <Input
                 id={`reg-${draft.id}`}
@@ -477,7 +488,10 @@ function RegistrationEditor({ draft }: { draft: DraftEventRow }) {
         }
       />
       <DropdownMenuContent align="start" className="w-80 p-3">
-        <div className="flex flex-col gap-2">
+        <div
+          className="flex flex-col gap-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <Label htmlFor={`reg-${draft.id}`}>Registration URL</Label>
           <Input
             id={`reg-${draft.id}`}
@@ -547,7 +561,10 @@ function TagsEditor({ draft }: { draft: DraftEventRow }) {
         }
       />
       <DropdownMenuContent align="start" className="w-72 p-3">
-        <div className="flex flex-col gap-2">
+        <div
+          className="flex flex-col gap-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <Label htmlFor={`tags-${draft.id}`}>Tags (comma-separated)</Label>
           <Input
             id={`tags-${draft.id}`}
