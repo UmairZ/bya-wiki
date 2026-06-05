@@ -524,6 +524,22 @@ export type EventFlyerUpdate = {
 };
 
 // ---------------------------------------------------------------------------
+// app_feedback
+// ---------------------------------------------------------------------------
+
+export type AppFeedbackRow = {
+  id: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type AppFeedbackInsert = {
+  body: string;
+  created_by?: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
 
@@ -612,6 +628,12 @@ export type Database = {
         Row: EventFlyerRow;
         Insert: EventFlyerInsert;
         Update: EventFlyerUpdate;
+        Relationships: [];
+      };
+      app_feedback: {
+        Row: AppFeedbackRow;
+        Insert: AppFeedbackInsert;
+        Update: never;
         Relationships: [];
       };
     };

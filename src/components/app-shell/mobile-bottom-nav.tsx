@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CalendarDays, FolderOpen, Inbox, Menu, Search } from "lucide-react";
+import {
+  CalendarDays,
+  FolderOpen,
+  Inbox,
+  Menu,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +100,17 @@ export function MobileBottomNav() {
               >
                 <Inbox className="size-4" aria-hidden />
                 <span>Tasks</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/feedback"
+                prefetch
+                onClick={() => setMoreOpen(false)}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted/60"
+              >
+                <Sparkles className="size-4" aria-hidden />
+                <span>Ideas</span>
               </Link>
             </li>
             <li className="my-1 border-t" />

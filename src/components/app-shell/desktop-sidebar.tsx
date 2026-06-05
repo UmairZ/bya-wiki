@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Inbox, Search } from "lucide-react";
+import { ChevronRight, Inbox, Search, Sparkles } from "lucide-react";
 import { APP_NAME, LOGO_ALT, LOGO_SRC } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { COMING_SOON_LABEL, MODULES, type Module } from "./nav-items";
@@ -209,6 +209,21 @@ export function DesktopSidebar({ spaces, ...profile }: DesktopSidebarProps) {
         >
           <Inbox className="size-4" aria-hidden />
           <span>Tasks</span>
+        </Link>
+
+        <Link
+          href="/feedback"
+          prefetch
+          aria-current={isActive(pathname, "/feedback") ? "page" : undefined}
+          className={cn(
+            "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            isActive(pathname, "/feedback")
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+          )}
+        >
+          <Sparkles className="size-4" aria-hidden />
+          <span>Ideas</span>
         </Link>
       </nav>
 
