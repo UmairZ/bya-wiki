@@ -68,8 +68,6 @@ export function TaskChecklist({
 
   return (
     <div className="flex flex-col gap-4">
-      <StagePills stages={stages} byStage={byStage} currentId={currentId} />
-
       <div className="relative pl-8">
         <RailLine stages={stages} byStage={byStage} currentId={currentId} />
 
@@ -124,64 +122,6 @@ function stageProgress(list: TaskRow[]) {
     total,
     pct: total === 0 ? 0 : Math.round((done / total) * 100),
   };
-}
-
-function StagePills({
-  stages,
-  byStage,
-  currentId,
-}: {
-  stages: EventStageRow[];
-  byStage: Map<string, TaskRow[]>;
-  currentId: string | null;
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {stages.map((stage) => {
-        const list = byStage.get(stage.id) ?? [];
-        const p = stageProgress(list);
-        const isCurrent = stage.id === currentId;
-        const isComplete = p.total > 0 && p.done === p.total;
-        return (
-          <div
-            key={stage.id}
-            className={cn(
-              "rounded-lg border bg-card p-3",
-              isCurrent && "border-primary/40 bg-primary/5 shadow-sm",
-            )}
-          >
-            <div className="flex items-baseline justify-between gap-2">
-              <span
-                className={cn(
-                  "truncate text-[10px] font-semibold uppercase tracking-wider",
-                  isCurrent ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                {stage.name}
-              </span>
-              <span
-                className={cn(
-                  "shrink-0 text-xs font-medium tabular-nums",
-                  isComplete ? "text-primary" : "text-foreground/80",
-                )}
-              >
-                {p.total === 0 ? "—" : `${p.done}/${p.total}`}
-              </span>
-            </div>
-            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted/60">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-[width] duration-300",
-                  isComplete ? "bg-primary" : "bg-primary/60",
-                )}
-                style={{ width: `${p.pct}%` }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 function RailLine({
