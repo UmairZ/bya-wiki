@@ -19,7 +19,7 @@ import type {
 } from "@/lib/supabase/types";
 import { EventDetailActions } from "./event-detail-actions";
 import { EventFlyerEditor } from "./event-flyer-editor";
-import { TaskKanban } from "./task-kanban";
+import { TaskChecklist } from "./task-checklist";
 import { TaskSectionHeader } from "./task-section-header";
 import { ClearTasksMenu } from "./clear-tasks-menu";
 import {
@@ -383,7 +383,7 @@ export default async function EventDetailPage({
           appliedTemplateNames={appliedTemplateNames}
         />
 
-        <TaskKanban
+        <TaskChecklist
           targetKind="event"
           targetRef={event.id}
           tasks={tasks}

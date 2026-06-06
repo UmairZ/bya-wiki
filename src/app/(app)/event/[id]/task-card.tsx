@@ -81,6 +81,10 @@ export function TaskCard({
   /** When true, hide the "move to stage" submenu (used in the flat draft list
    *  where every task is in the Drafts stage by definition). */
   hideMoveToStage = false,
+  /** `card` (default) is the bordered, drop-shadow-ready style suited to a
+   *  kanban column. `row` is a borderless checklist row that lives inside a
+   *  shared container (used by the per-event checklist). */
+  display = "card",
 }: {
   task: TaskRow;
   stages: EventStageRow[];
@@ -89,6 +93,7 @@ export function TaskCard({
   targetKind: "event" | "draft";
   targetRef: string;
   hideMoveToStage?: boolean;
+  display?: "card" | "row";
 }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -142,7 +147,9 @@ export function TaskCard({
   return (
     <div
       className={cn(
-        "group flex items-start gap-2 rounded-md border bg-card px-2 py-1.5 transition-colors",
+        "group flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors",
+        display === "card" && "border bg-card",
+        display === "row" && "hover:bg-muted/40",
         isDone && "opacity-60",
         isSkipped && "opacity-50 line-through",
       )}
