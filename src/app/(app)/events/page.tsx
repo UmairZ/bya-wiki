@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { CalendarDays, Plug } from "lucide-react";
+import { CalendarDays, Plug, Settings } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { getConnectionStatus } from "@/lib/calendar/google";
 import type { CalendarEvent } from "@/lib/calendar/types";
@@ -125,40 +126,56 @@ export default async function EventsPage() {
   const enrichedDrafts = enrichDrafts(drafts, allTasks);
   const { kanban } = splitForEventsPage(enriched);
 
+  const setupSteps: { key: string; node: ReactNode }[] = [];
+  if (isOwner && stages.length === 0) {
+    setupSteps.push({
+      key: "stages",
+      node: (
+        <>
+          <span className="font-medium text-foreground">Event stages</span>{" "}
+          aren&apos;t configured. Run migration{" "}
+          <code className="font-mono text-xs">0007_event_stages.sql</code>{" "}
+          or open{" "}
+          <Link href="/admin/event-stages">/admin/event-stages</Link>.
+        </>
+      ),
+    });
+  }
+  if (isOwner && current && !canWrite) {
+    setupSteps.push({
+      key: "google",
+      node: (
+        <>
+          <span className="font-medium text-foreground">
+            Google Calendar write access
+          </span>{" "}
+          isn&apos;t connected. Open{" "}
+          <Link href="/admin/integrations">Integrations</Link> so the team
+          can create and edit events from the wiki.
+        </>
+      ),
+    });
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
       <header className="flex items-end justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
       </header>
 
-      {stages.length === 0 && isOwner && (
+      {setupSteps.length > 0 && (
         <Alert>
+          <Settings aria-hidden />
+          <AlertTitle>Finish setup</AlertTitle>
           <AlertDescription>
-            Event stages aren&apos;t set up yet. Run migration{" "}
-            <code className="font-mono text-xs">0007_event_stages.sql</code> in
-            Supabase, or visit{" "}
-            <Link
-              href="/admin/event-stages"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              /admin/event-stages
-            </Link>
-            .
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!canWrite && current && isOwner && (
-        <Alert>
-          <AlertDescription>
-            Connect Google Calendar (write access) in{" "}
-            <Link
-              href="/admin/integrations"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              Integrations
-            </Link>{" "}
-            to let members create + edit events directly from the wiki.
+            <ul className="mt-1 flex flex-col gap-1.5">
+              {setupSteps.map((step) => (
+                <li key={step.key} className="flex gap-2">
+                  <span aria-hidden className="select-none">·</span>
+                  <span>{step.node}</span>
+                </li>
+              ))}
+            </ul>
           </AlertDescription>
         </Alert>
       )}
