@@ -230,7 +230,7 @@ export function TaskCard({
             <Button
               variant="ghost"
               size="icon"
-              className="size-6 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[popup-open]:opacity-100"
+              className="size-6 opacity-100 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100 data-[popup-open]:opacity-100"
               aria-label="Task actions"
               disabled={pending}
             />

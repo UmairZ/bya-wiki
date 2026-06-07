@@ -32,7 +32,7 @@ export function FeedbackItemActions({
       onClick={handleDelete}
       disabled={pending}
       aria-label="Delete idea"
-      className="size-7 shrink-0 p-0 text-muted-foreground/60 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
+      className="size-7 shrink-0 p-0 text-muted-foreground/60 opacity-100 transition-opacity hover:text-destructive pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100"
     >
       <Trash2 className="size-3.5" aria-hidden />
     </Button>
