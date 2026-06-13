@@ -88,6 +88,31 @@ export function isoToDateOnlyInput(iso: string | null | undefined): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** UTC ISO → "HH:mm" (24h) in local time, for an <input type="time">. */
+export function isoToTimeInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Combine a "YYYY-MM-DD" date and "HH:mm" time (both local) into a UTC ISO
+ *  string. All-day → local midnight; date with no time → 9am local default. */
+export function combineDateTime(
+  dateStr: string,
+  timeStr: string,
+  allDay: boolean,
+): string | null {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  if (allDay) return new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
+  if (!timeStr) return new Date(y, m - 1, d, 9, 0, 0, 0).toISOString();
+  const [hh, mm] = timeStr.split(":").map(Number);
+  return new Date(y, m - 1, d, hh ?? 0, mm ?? 0, 0, 0).toISOString();
+}
+
 const DAY_FMT = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
   month: "short",
