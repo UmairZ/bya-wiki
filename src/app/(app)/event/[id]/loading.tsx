@@ -1,8 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const STAGE_LABELS = ["Drafts", "Pre-event", "Day-of", "Wrap-up"];
-
 function MetadataRowSkeleton() {
   return (
     <div className="flex items-center gap-2 rounded-md px-2 py-1">
@@ -52,24 +50,11 @@ export default function EventDetailLoading() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Tasks
         </h2>
+        {/* Progress summary, then the stage rail (vertical checklist) */}
         <Skeleton className="h-12 w-full rounded-lg" />
-        <div className="grid auto-rows-min gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {STAGE_LABELS.map((l) => (
-            <section
-              key={l}
-              className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3"
-            >
-              <div className="flex items-baseline justify-between px-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  {l}
-                </h3>
-                <Skeleton className="h-3 w-6" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-[72px] w-full rounded-md" />
-                <Skeleton className="h-[72px] w-full rounded-md" />
-              </div>
-            </section>
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-11 w-full rounded-lg" />
           ))}
         </div>
       </section>
