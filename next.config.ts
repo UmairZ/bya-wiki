@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
     "temporal-polyfill",
     "rrule-temporal",
   ],
+  // Allow next/image to optimize flyers served from the public Supabase
+  // Storage bucket (stable public URLs, so optimization caches cleanly).
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

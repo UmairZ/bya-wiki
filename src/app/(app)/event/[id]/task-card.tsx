@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import {
   Calendar,
   Check,
-  Loader2,
   MoreHorizontal,
   Move,
   Trash2,
@@ -105,9 +104,16 @@ export function TaskCard({
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
+  // Optimistic status: a check/skip flips the UI instantly, then settles to
+  // the real status once the server result re-renders this card (or reverts
+  // on error, with a toast).
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    task.status,
+    (_prev, next: TaskStatus) => next,
+  );
 
-  const isDone = task.status === "done";
-  const isSkipped = task.status === "skipped";
+  const isDone = optimisticStatus === "done";
+  const isSkipped = optimisticStatus === "skipped";
   const assignee = task.assigned_to ? membersById.get(task.assigned_to) : null;
 
   function call(fn: () => Promise<{ ok: boolean; error?: string }>) {
@@ -119,7 +125,11 @@ export function TaskCard({
 
   function toggleStatus() {
     const nextStatus: TaskStatus = isDone ? "todo" : "done";
-    call(() => setTaskStatusAction(task.id, nextStatus, targetRef));
+    startTransition(async () => {
+      setOptimisticStatus(nextStatus);
+      const r = await setTaskStatusAction(task.id, nextStatus, targetRef);
+      if (!r.ok && r.error) toast.error(r.error);
+    });
   }
 
   function commitRename() {
@@ -138,7 +148,11 @@ export function TaskCard({
 
   function handleSkipToggle() {
     const nextStatus: TaskStatus = isSkipped ? "todo" : "skipped";
-    call(() => setTaskStatusAction(task.id, nextStatus, targetRef));
+    startTransition(async () => {
+      setOptimisticStatus(nextStatus);
+      const r = await setTaskStatusAction(task.id, nextStatus, targetRef);
+      if (!r.ok && r.error) toast.error(r.error);
+    });
   }
 
   function handleDelete() {
@@ -174,11 +188,7 @@ export function TaskCard({
             : "border-muted-foreground/40 hover:border-primary",
         )}
       >
-        {pending ? (
-          <Loader2 className="size-3 animate-spin" aria-hidden />
-        ) : isDone ? (
-          <Check className="size-3" aria-hidden />
-        ) : null}
+        {isDone ? <Check className="size-3" aria-hidden /> : null}
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">

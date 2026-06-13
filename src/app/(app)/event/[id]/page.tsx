@@ -152,15 +152,16 @@ export default async function EventDetailPage({
   const { id: rawId } = await params;
   const eventId = decodeURIComponent(rawId);
 
-  // 1) UUID → try draft.
+  // 1) UUID → try draft. Load tasks alongside the rest rather than after the
+  // draft resolves — a non-draft UUID (rare) just does one extra empty query.
   if (UUID_RE.test(eventId)) {
-    const [draft, stages, members] = await Promise.all([
+    const [draft, stages, members, tasks] = await Promise.all([
       loadDraft(eventId),
       loadStages(),
       loadActiveMembers(),
+      loadTasksFor(eventId, "draft"),
     ]);
     if (draft) {
-      const tasks = await loadTasksFor(eventId, "draft");
       return (
         <DraftView
           draft={draft}

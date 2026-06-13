@@ -183,7 +183,6 @@ export default async function PublicEventsPage() {
                         "object-cover transition-transform duration-300 group-hover:scale-[1.04]",
                         t.registration_closed && "grayscale-[60%]",
                       )}
-                      unoptimized
                     />
                     {/* Floating date chip in top-left — readable on any flyer
                         color via the white background + ring. */}
