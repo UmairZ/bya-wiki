@@ -5,9 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireOwner } from "@/lib/auth/current-user";
 
-export type ActionResult<T = null> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 export type CreateMemberResult = ActionResult<{
   email: string;

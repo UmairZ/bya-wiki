@@ -20,9 +20,7 @@ import type {
   GenderTag,
 } from "@/lib/supabase/types";
 
-export type ActionResult<T = null> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 function revalidateDraft(draftId: string) {
   revalidatePath(`/event/${encodeURIComponent(draftId)}`);

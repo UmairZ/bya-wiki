@@ -8,6 +8,7 @@ import {
   createDownloadUrl,
   uploadToStorage,
 } from "@/lib/storage";
+import { type ActionResult } from "@/lib/action-result";
 
 export type UploadResult =
   | { ok: true; id: string }
@@ -85,8 +86,6 @@ export async function uploadFileAction(
   return { ok: true, id: inserted.id };
 }
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
 export async function renameResourceAction(
   id: string,
   title: string,
@@ -106,7 +105,7 @@ export async function renameResourceAction(
 
   if (data?.category?.slug) revalidatePath(`/c/${data.category.slug}`);
   revalidatePath("/");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function togglePinResourceAction(
@@ -125,7 +124,7 @@ export async function togglePinResourceAction(
 
   if (data?.category?.slug) revalidatePath(`/c/${data.category.slug}`);
   revalidatePath("/");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function softDeleteResourceAction(
@@ -144,7 +143,7 @@ export async function softDeleteResourceAction(
   if (data?.category?.slug) revalidatePath(`/c/${data.category.slug}`);
   revalidatePath("/");
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export type DownloadResult =

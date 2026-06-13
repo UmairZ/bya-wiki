@@ -7,7 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { uniqueSlug } from "@/lib/slug";
 import { deleteFromStorage } from "@/lib/storage";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 // ---------------------------------------------------------------------------
 // Pages
@@ -49,7 +49,7 @@ export async function restorePageAction(id: string): Promise<ActionResult> {
 
   revalidatePath("/");
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function hardDeletePageAction(id: string): Promise<ActionResult> {
@@ -59,7 +59,7 @@ export async function hardDeletePageAction(id: string): Promise<ActionResult> {
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ export async function restoreResourceAction(
 
   revalidatePath("/");
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function hardDeleteResourceAction(
@@ -110,7 +110,7 @@ export async function hardDeleteResourceAction(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -151,5 +151,5 @@ export async function emptyTrashAction(): Promise<ActionResult> {
   }
 
   revalidatePath("/admin/trash");
-  return { ok: true };
+  return { ok: true, data: null };
 }

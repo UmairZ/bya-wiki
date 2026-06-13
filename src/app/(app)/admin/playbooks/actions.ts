@@ -5,9 +5,7 @@ import { requireOwner } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { PlaybookTemplateTaskUpdate } from "@/lib/supabase/types";
 
-export type ActionResult<T = null> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 async function revalidateAdminPlaybooks(templateId?: string) {
   revalidatePath("/admin/playbooks");

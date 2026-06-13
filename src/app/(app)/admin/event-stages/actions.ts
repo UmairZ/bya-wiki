@@ -4,9 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 async function revalidateStages() {
   revalidatePath("/events");
@@ -35,7 +33,7 @@ export async function createStageAction(
   if (error) return { ok: false, error: error.message };
 
   await revalidateStages();
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function renameStageAction(
@@ -54,7 +52,7 @@ export async function renameStageAction(
   if (error) return { ok: false, error: error.message };
 
   await revalidateStages();
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function moveStageAction(
@@ -77,7 +75,7 @@ export async function moveStageAction(
 
   const swapWith =
     direction === "up" ? ordered[index - 1] : ordered[index + 1];
-  if (!swapWith) return { ok: true };
+  if (!swapWith) return { ok: true, data: null };
 
   const self = ordered[index];
   const { error: e1 } = await supabase
@@ -93,7 +91,7 @@ export async function moveStageAction(
   if (e2) return { ok: false, error: e2.message };
 
   await revalidateStages();
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
 export async function deleteStageAction(id: string): Promise<ActionResult> {
@@ -118,5 +116,5 @@ export async function deleteStageAction(id: string): Promise<ActionResult> {
   }
 
   await revalidateStages();
-  return { ok: true };
+  return { ok: true, data: null };
 }

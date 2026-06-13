@@ -7,6 +7,7 @@ import {
   clearConnection,
   setSelectedCalendar,
 } from "@/lib/calendar/google";
+import { type ActionResult } from "@/lib/action-result";
 
 // ---------------------------------------------------------------------------
 // ICS feed URL
@@ -60,12 +61,10 @@ export async function refreshCalendarAction(): Promise<{ ok: true }> {
 // Google OAuth — calendar picker + disconnect
 // ---------------------------------------------------------------------------
 
-export type GoogleActionResult = { ok: true } | { ok: false; error: string };
-
 export async function selectGoogleCalendarAction(
   calendarId: string,
   calendarName: string,
-): Promise<GoogleActionResult> {
+): Promise<ActionResult> {
   await requireOwner();
   if (!calendarId) return { ok: false, error: "Pick a calendar." };
   try {
@@ -75,10 +74,10 @@ export async function selectGoogleCalendarAction(
   }
   revalidatePath("/admin/integrations");
   revalidatePath("/events");
-  return { ok: true };
+  return { ok: true, data: null };
 }
 
-export async function disconnectGoogleAction(): Promise<GoogleActionResult> {
+export async function disconnectGoogleAction(): Promise<ActionResult> {
   await requireOwner();
   try {
     await clearConnection();
@@ -87,5 +86,5 @@ export async function disconnectGoogleAction(): Promise<GoogleActionResult> {
   }
   revalidatePath("/admin/integrations");
   revalidatePath("/events");
-  return { ok: true };
+  return { ok: true, data: null };
 }

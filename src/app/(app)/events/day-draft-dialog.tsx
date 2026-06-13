@@ -14,10 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  createDraftAction,
-  type ActionResult,
-} from "@/app/(app)/drafts/actions";
+import { createDraftAction } from "@/app/(app)/drafts/actions";
+import { type ActionResult } from "@/lib/action-result";
 import { formatFullDateString } from "@/lib/date-time";
 
 /** Title-only dialog that creates a draft with a pre-set date and jumps to

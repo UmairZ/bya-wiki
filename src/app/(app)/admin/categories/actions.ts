@@ -5,9 +5,7 @@ import { requireOwner } from "@/lib/auth/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { slugify, uniqueSlug } from "@/lib/slug";
 
-export type ActionResult<T = null> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 async function revalidateBrowse() {
   revalidatePath("/resources");

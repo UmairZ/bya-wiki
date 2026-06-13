@@ -23,9 +23,7 @@ import type {
   TaskUpdate,
 } from "@/lib/supabase/types";
 
-export type ActionResult<T = null> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import { type ActionResult } from "@/lib/action-result";
 
 /** Revalidate just the event/draft detail page. Use for edits that don't
  *  shift the card's position on the Events Kanban (rename, assign, due date). */
