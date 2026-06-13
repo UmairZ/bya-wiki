@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronRight, Inbox, Search, Sparkles } from "lucide-react";
 import { APP_NAME, LOGO_ALT, LOGO_SRC } from "@/lib/brand";
 import { cn } from "@/lib/utils";
@@ -104,9 +104,13 @@ export function DesktopSidebar({ spaces, ...profile }: DesktopSidebarProps) {
     pathname.startsWith("/resources") || pathname.startsWith("/c/");
   const [resourcesOpen, setResourcesOpen] = useState(insideResources);
 
-  useEffect(() => {
+  // Re-expand when navigation moves into Resources. Prev-value render pattern
+  // instead of an effect, so there's no extra commit.
+  const [prevInside, setPrevInside] = useState(insideResources);
+  if (insideResources !== prevInside) {
+    setPrevInside(insideResources);
     if (insideResources) setResourcesOpen(true);
-  }, [insideResources]);
+  }
 
   return (
     <aside

@@ -20,7 +20,7 @@ export function SetPasswordForm() {
           Set a new password
         </h1>
         <p className="text-sm text-muted-foreground">
-          You're using a temporary password. Choose a new one to continue.
+          You&apos;re using a temporary password. Choose a new one to continue.
         </p>
       </div>
 

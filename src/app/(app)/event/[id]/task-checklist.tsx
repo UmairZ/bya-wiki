@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EventStageRow, TaskRow } from "@/lib/supabase/types";
@@ -34,16 +34,20 @@ export function TaskChecklist({
 
   // If the current stage changes (a stage's last todo got ticked, advancing
   // us forward), open the new current stage too — without collapsing what
-  // the user already opened.
-  useEffect(() => {
-    if (!currentId) return;
-    setExpanded((prev) => {
-      if (prev.has(currentId)) return prev;
-      const next = new Set(prev);
-      next.add(currentId);
-      return next;
-    });
-  }, [currentId]);
+  // the user already opened. Done via the prev-value render pattern rather
+  // than an effect, so there's no extra commit/re-render.
+  const [prevCurrentId, setPrevCurrentId] = useState(currentId);
+  if (currentId !== prevCurrentId) {
+    setPrevCurrentId(currentId);
+    if (currentId) {
+      setExpanded((prev) => {
+        if (prev.has(currentId)) return prev;
+        const next = new Set(prev);
+        next.add(currentId);
+        return next;
+      });
+    }
+  }
 
   function toggle(id: string) {
     setExpanded((prev) => {

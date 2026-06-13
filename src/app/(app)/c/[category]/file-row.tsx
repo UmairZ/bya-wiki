@@ -13,7 +13,6 @@ import {
   Pin,
   PinOff,
   Trash2,
-  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -52,17 +51,29 @@ export type FileRowData = {
   updated_at: string;
 };
 
-function iconFor(type: string): LucideIcon {
-  if (type.startsWith("image/")) return ImageIcon;
-  if (type.startsWith("audio/")) return FileAudio;
-  if (type.startsWith("video/")) return FileVideo;
+/** Picks a file-type icon and renders it directly. Returning literal JSX
+ *  (rather than `const Icon = iconFor(...)` in the caller's render) keeps it
+ *  a stable component instead of one re-created each render. */
+function FileTypeIcon({
+  type,
+  className,
+}: {
+  type: string;
+  className?: string;
+}) {
+  if (type.startsWith("image/"))
+    return <ImageIcon className={className} aria-hidden />;
+  if (type.startsWith("audio/"))
+    return <FileAudio className={className} aria-hidden />;
+  if (type.startsWith("video/"))
+    return <FileVideo className={className} aria-hidden />;
   if (
     type.includes("spreadsheet") ||
     type === "text/csv" ||
     type.endsWith("/csv")
   )
-    return FileSpreadsheet;
-  return FileText;
+    return <FileSpreadsheet className={className} aria-hidden />;
+  return <FileText className={className} aria-hidden />;
 }
 
 function formatBytes(bytes: number): string {
@@ -72,7 +83,6 @@ function formatBytes(bytes: number): string {
 }
 
 export function FileRow({ file }: { file: FileRowData }) {
-  const Icon = iconFor(file.file_type);
   const [pending, startTransition] = useTransition();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -103,7 +113,7 @@ export function FileRow({ file }: { file: FileRowData }) {
           className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left transition-colors hover:bg-brand-tint/40 focus-visible:outline-none focus-visible:bg-brand-tint/40 -mx-1 px-1 py-0.5"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <Icon className="size-4" aria-hidden />
+            <FileTypeIcon type={file.file_type} className="size-4" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex flex-wrap items-center gap-2">

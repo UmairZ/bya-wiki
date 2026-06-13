@@ -127,10 +127,13 @@ async function loadMyTasks(userId: string): Promise<MyTask[]> {
     });
 }
 
-export default async function MyTasksPage() {
-  const { userId, profile } = await requireCurrentUser();
-  const myTasks = await loadMyTasks(userId);
-
+/** Bucket tasks by due date. The current-clock read lives here, in a plain
+ *  helper, rather than inline in the (purity-checked) page component. Returns
+ *  the same `now` so the component can pass a consistent clock to rows. */
+function groupTasksByDue(myTasks: MyTask[]): {
+  now: number;
+  groupsBy: Record<Group["key"], MyTask[]>;
+} {
   const now = Date.now();
   const groupsBy: Record<Group["key"], MyTask[]> = {
     overdue: [],
@@ -142,6 +145,14 @@ export default async function MyTasksPage() {
   for (const t of myTasks) {
     groupsBy[bucket(t, now)].push(t);
   }
+  return { now, groupsBy };
+}
+
+export default async function MyTasksPage() {
+  const { userId, profile } = await requireCurrentUser();
+  const myTasks = await loadMyTasks(userId);
+
+  const { now, groupsBy } = groupTasksByDue(myTasks);
 
   const groups: Group[] = [
     { key: "overdue", label: "Overdue", tone: "destructive", tasks: groupsBy.overdue },

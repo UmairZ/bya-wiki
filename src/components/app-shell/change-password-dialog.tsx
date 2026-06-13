@@ -44,7 +44,7 @@ export function ChangePasswordDialog({
         <DialogHeader>
           <DialogTitle>Change password</DialogTitle>
           <DialogDescription>
-            Pick a new password. You'll stay signed in.
+            Pick a new password. You&apos;ll stay signed in.
           </DialogDescription>
         </DialogHeader>
 

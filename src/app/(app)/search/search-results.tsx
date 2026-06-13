@@ -37,13 +37,11 @@ export function SearchSurface({
   const [results, setResults] = useState<SearchResults>(initialResults);
   const [pending, startTransition] = useTransition();
 
-  // Re-query when the debounced value changes.
+  // Re-query when the debounced value changes. Short queries don't fetch;
+  // the display layer below shows EMPTY for them (no state reset needed).
   useEffect(() => {
     const q = deferred.trim();
-    if (q.length < 2) {
-      setResults(EMPTY);
-      return;
-    }
+    if (q.length < 2) return;
     let cancelled = false;
     startTransition(async () => {
       const next = await searchAction(q);
@@ -68,8 +66,10 @@ export function SearchSurface({
     });
   }, [deferred, variant, router, searchParams]);
 
+  // Below 2 chars we show nothing regardless of the last fetched results.
+  const display = deferred.trim().length < 2 ? EMPTY : results;
   const total =
-    results.pages.length + results.files.length + results.events.length;
+    display.pages.length + display.files.length + display.events.length;
 
   return (
     <div
@@ -109,13 +109,13 @@ export function SearchSurface({
         ) : total === 0 ? (
           <p className="px-2 py-6 text-center text-sm text-muted-foreground">
             No matches for{" "}
-            <span className="font-medium text-foreground">"{deferred}"</span>.
+            <span className="font-medium text-foreground">&quot;{deferred}&quot;</span>.
           </p>
         ) : (
           <div className="flex flex-col gap-4">
-            {results.pages.length > 0 && (
-              <Group label="Pages" count={results.pages.length}>
-                {results.pages.map((hit) => (
+            {display.pages.length > 0 && (
+              <Group label="Pages" count={display.pages.length}>
+                {display.pages.map((hit) => (
                   <ResultRow
                     key={`page-${hit.id}`}
                     href={`/p/${hit.id}`}
@@ -133,9 +133,9 @@ export function SearchSurface({
               </Group>
             )}
 
-            {results.files.length > 0 && (
-              <Group label="Files" count={results.files.length}>
-                {results.files.map((hit) => (
+            {display.files.length > 0 && (
+              <Group label="Files" count={display.files.length}>
+                {display.files.map((hit) => (
                   <ResultRow
                     key={`file-${hit.id}`}
                     href={
@@ -155,9 +155,9 @@ export function SearchSurface({
               </Group>
             )}
 
-            {results.events.length > 0 && (
-              <Group label="Events" count={results.events.length}>
-                {results.events.map((hit) => (
+            {display.events.length > 0 && (
+              <Group label="Events" count={display.events.length}>
+                {display.events.map((hit) => (
                   <ResultRow
                     key={`event-${hit.id}`}
                     href={hit.html_link ?? "/events"}

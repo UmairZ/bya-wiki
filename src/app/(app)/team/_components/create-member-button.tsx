@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,30 +14,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  createMemberAction,
-  type CreateMemberResult,
-} from "../actions";
+import { createMemberAction } from "../actions";
 import { TempPasswordDialog } from "./temp-password-dialog";
 
 export function CreateMemberButton() {
   const [formOpen, setFormOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [reveal, setReveal] = useState<{
     email: string;
     tempPassword: string;
   } | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  const [state, formAction, pending] = useActionState<
-    CreateMemberResult | undefined,
-    FormData
-  >(createMemberAction, undefined);
-
-  useEffect(() => {
-    if (state?.ok) {
-      setReveal(state.data);
-      setFormOpen(false);
-    }
-  }, [state]);
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      const result = await createMemberAction(undefined, formData);
+      if (result.ok) {
+        setReveal(result.data);
+        setFormOpen(false);
+      } else {
+        setError(result.error);
+      }
+    });
+  }
 
   return (
     <>
@@ -56,10 +58,10 @@ export function CreateMemberButton() {
             </DialogDescription>
           </DialogHeader>
 
-          <form action={formAction} className="flex flex-col gap-4">
-            {state && !state.ok && (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
               <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 

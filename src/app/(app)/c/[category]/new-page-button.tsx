@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,18 +14,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { createPageAction, type CreatePageState } from "../actions";
+import { createPageAction } from "../actions";
 
 export function NewPageButton({ categoryId }: { categoryId: string }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    CreatePageState,
-    FormData
-  >(createPageAction, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!pending && state === undefined) setOpen(false);
-  }, [pending, state]);
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      // Resolves to a state object only on failure; success redirects.
+      const result = await createPageAction(undefined, formData);
+      if (result?.error) setError(result.error);
+      else setOpen(false);
+    });
+  }
 
   return (
     <>
@@ -43,10 +49,10 @@ export function NewPageButton({ categoryId }: { categoryId: string }) {
             </DialogDescription>
           </DialogHeader>
 
-          <form action={formAction} className="flex flex-col gap-4">
-            {state?.error && (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
               <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChevronLeft, ExternalLink, Link as LinkIcon } from "lucide-react";
 import { MetadataGrid, MetadataRow } from "./metadata-block";
 import { CopyEventButton } from "./copy-event-button";
+import { buttonVariants } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
@@ -201,7 +202,7 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  let event = events.find((e) => e.id === eventId);
+  const event = events.find((e) => e.id === eventId);
   if (!event) {
     const baseUidFromUrl = eventId.split("::")[0];
     const candidates = events.filter(
@@ -337,9 +338,9 @@ export default async function EventDetailPage({
                   href={event.html_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
                 >
-                  <ExternalLink className="size-4" aria-hidden />
+                  <ExternalLink aria-hidden />
                   Open in Google Calendar
                 </a>
               </div>

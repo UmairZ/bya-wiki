@@ -1,8 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ArrowUpRight, Calendar, Lock, MapPin } from "lucide-react";
-// eslint-disable-next-line @next/next/no-img-element -- intentional: the
-// lockup logo is small + cached + we want unconstrained aspect ratio
 import { APP_NAME, LOGO_LOCKUP_SRC } from "@/lib/brand";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
@@ -136,6 +134,7 @@ export default async function PublicEventsPage() {
           {/* Plain img — Next/Image's required width+height + the lockup's
               unknown aspect ratio fight each other in dev warnings, and the
               optimization win on a small static org logo is nil. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={LOGO_LOCKUP_SRC}
             alt={`${APP_NAME} logo`}

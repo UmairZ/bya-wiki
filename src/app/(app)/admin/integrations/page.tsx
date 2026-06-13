@@ -44,7 +44,7 @@ export default async function IntegrationsPage({
       {google === "error" && (
         <Alert variant="destructive">
           <AlertDescription>
-            Couldn't connect Google Calendar
+            Couldn&apos;t connect Google Calendar
             {google_msg ? `: ${google_msg}` : "."}
           </AlertDescription>
         </Alert>
@@ -69,7 +69,7 @@ export default async function IntegrationsPage({
               Calendar feed (read path)
             </h2>
             <p className="text-sm text-muted-foreground">
-              Paste the calendar's ICS URL. The wiki fetches it with a
+              Paste the calendar&apos;s ICS URL. The wiki fetches it with a
               15-minute cache and renders events on{" "}
               <Link
                 href="/events"

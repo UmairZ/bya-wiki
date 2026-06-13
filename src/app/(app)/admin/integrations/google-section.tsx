@@ -71,7 +71,7 @@ export async function GoogleSection() {
 
       {listError ? (
         <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          Couldn't load calendars: {listError}
+          Couldn&apos;t load calendars: {listError}
         </p>
       ) : (
         <GoogleCalendarPicker

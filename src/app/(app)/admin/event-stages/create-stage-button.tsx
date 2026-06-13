@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,24 +13,25 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createStageAction, type ActionResult } from "./actions";
+import { createStageAction } from "./actions";
 
 export function CreateStageButton() {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionResult | undefined,
-    FormData
-  >(createStageAction, undefined);
+  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      setOpen(false);
-      toast.success("Stage added.");
-    } else {
-      toast.error(state.error);
-    }
-  }, [state]);
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const result = await createStageAction(undefined, formData);
+      if (result.ok) {
+        setOpen(false);
+        toast.success("Stage added.");
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
 
   return (
     <>
@@ -40,7 +41,7 @@ export function CreateStageButton() {
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
-          <form action={formAction}>
+          <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>New stage</DialogTitle>
             </DialogHeader>

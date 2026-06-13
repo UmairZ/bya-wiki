@@ -1,15 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createDraftAction,
-  type ActionResult,
-} from "@/app/(app)/drafts/actions";
+import { createDraftAction } from "@/app/(app)/drafts/actions";
 
 /** Inline composer at the top of the Drafts column. One-line title input;
  *  submit creates the draft and navigates to its detail page so you can
@@ -18,21 +15,22 @@ export function AddDraftComposer() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionResult<string> | undefined,
-    FormData
-  >(createDraftAction, undefined);
+  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      formRef.current?.reset();
-      setOpen(false);
-      router.push(`/event/${encodeURIComponent(state.data)}`);
-    } else {
-      toast.error(state.error);
-    }
-  }, [state, router]);
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const result = await createDraftAction(undefined, formData);
+      if (result.ok) {
+        formRef.current?.reset();
+        setOpen(false);
+        router.push(`/event/${encodeURIComponent(result.data)}`);
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
 
   if (!open) {
     return (
@@ -50,7 +48,7 @@ export function AddDraftComposer() {
   return (
     <form
       ref={formRef}
-      action={formAction}
+      onSubmit={handleSubmit}
       className="flex flex-col gap-1.5 rounded-md border bg-card p-2"
     >
       <Input

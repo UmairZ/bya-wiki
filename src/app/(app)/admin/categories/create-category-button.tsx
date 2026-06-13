@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,23 +15,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CategoryIcon, CATEGORY_ICON_NAMES } from "@/components/category-icon";
-import { createCategoryAction, type ActionResult } from "./actions";
+import { createCategoryAction } from "./actions";
 import { cn } from "@/lib/utils";
 
 export function CreateCategoryButton() {
   const [open, setOpen] = useState(false);
   const [icon, setIcon] = useState<string>("folder");
-  const [state, formAction, pending] = useActionState<
-    ActionResult | undefined,
-    FormData
-  >(createCategoryAction, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state?.ok) {
-      setOpen(false);
-      setIcon("folder");
-    }
-  }, [state]);
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      const result = await createCategoryAction(undefined, formData);
+      if (result.ok) {
+        setOpen(false);
+        setIcon("folder");
+      } else {
+        setError(result.error);
+      }
+    });
+  }
 
   return (
     <>
@@ -49,10 +55,10 @@ export function CreateCategoryButton() {
             </DialogDescription>
           </DialogHeader>
 
-          <form action={formAction} className="flex flex-col gap-4">
-            {state && !state.ok && (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
               <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 

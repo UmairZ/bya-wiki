@@ -52,10 +52,6 @@ function bucketEvents(events: EnrichedEvent[], stages: Stage[]) {
 
 function ProgressBar({ done, total }: { done: number; total: number }) {
   if (total === 0) return null;
-  const segments = Array.from({ length: Math.min(total, 8) }, (_, i) => {
-    const slot = Math.floor((i / Math.min(total, 8)) * total);
-    return slot < done;
-  });
   return (
     <div className="flex items-center gap-1">
       <div className="flex h-1 flex-1 overflow-hidden rounded-full bg-muted">

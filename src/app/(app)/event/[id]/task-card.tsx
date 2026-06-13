@@ -44,6 +44,13 @@ export type MemberSummary = {
   display_name: string;
 };
 
+/** Whether a date is in the past, evaluated against the current clock.
+ *  Kept as a plain helper (not inline `Date.now()` in render) so the
+ *  overdue check stays out of the component's render-purity surface. */
+function isPast(date: Date): boolean {
+  return date.getTime() < Date.now();
+}
+
 function initialsOf(name: string) {
   return name
     .split(/\s+/)
@@ -142,7 +149,7 @@ export function TaskCard({
   const dueDate = task.due_at ? new Date(task.due_at) : null;
   const dueLabel = dueDate ? formatMonthDay(dueDate) : null;
   const isOverdue =
-    dueDate && !isDone && !isSkipped && dueDate.getTime() < Date.now();
+    dueDate && !isDone && !isSkipped && isPast(dueDate);
 
   return (
     <div

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatFullDateString, formatTime } from "@/lib/date-time";
 import type { AudienceTag, GenderTag } from "@/lib/supabase/types";
@@ -87,22 +88,21 @@ export function CopyEventButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       onClick={handleCopy}
       title="Copy event details (WhatsApp-ready)"
       aria-label="Copy event details"
-      className={cn(
-        "inline-flex h-7 items-center gap-1.5 rounded-md border bg-card px-2 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground",
-        className,
-      )}
+      className={cn("bg-card text-muted-foreground shadow-sm hover:text-foreground", className)}
     >
       {copied ? (
-        <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+        <Check className="text-emerald-600 dark:text-emerald-400" aria-hidden />
       ) : (
-        <Copy className="size-3.5" aria-hidden />
+        <Copy aria-hidden />
       )}
       <span>{copied ? "Copied" : "Copy"}</span>
-    </button>
+    </Button>
   );
 }

@@ -34,22 +34,25 @@ export function FilePreviewDialog({
   open: boolean;
   onOpenChange: (next: boolean) => void;
 }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Keyed by resource id so a stale url never shows for a newly-opened file:
+  // while the id doesn't match, the derived url/error below read as "loading".
+  const [fetched, setFetched] = useState<{
+    id: string;
+    url: string | null;
+    error: string | null;
+  }>({ id: "", url: null, error: null });
 
   useEffect(() => {
-    if (!open || !resource) {
-      setUrl(null);
-      setError(null);
-      return;
-    }
+    if (!open || !resource) return;
+    const id = resource.id;
     let cancelled = false;
-    setUrl(null);
-    setError(null);
-    getResourceUrlAction(resource.id).then((result) => {
+    getResourceUrlAction(id).then((result) => {
       if (cancelled) return;
-      if (!result.ok) setError(result.error);
-      else setUrl(result.url);
+      setFetched(
+        result.ok
+          ? { id, url: result.url, error: null }
+          : { id, url: null, error: result.error },
+      );
     });
     return () => {
       cancelled = true;
@@ -67,6 +70,10 @@ export function FilePreviewDialog({
   }
 
   if (!resource) return null;
+
+  // Surface url/error only when they belong to the open resource.
+  const url = fetched.id === resource.id ? fetched.url : null;
+  const error = fetched.id === resource.id ? fetched.error : null;
 
   const previewable = isImage(resource.file_type) || isPdf(resource.file_type);
 
