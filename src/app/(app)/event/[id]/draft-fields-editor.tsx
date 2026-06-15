@@ -259,7 +259,17 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
   const [open, setOpen] = useState(false);
   const { save, pending } = useFieldSave(draft);
   const textRef = useRef(draft.location ?? "");
-  const pickRef = useRef<PlacePick | null>(null);
+  const pickRef = useRef<PlacePick | null>(
+    draft.location_place_id
+      ? {
+          name: draft.location_name ?? "",
+          address: draft.location_address ?? "",
+          lat: draft.location_lat ?? 0,
+          lng: draft.location_lng ?? 0,
+          placeId: draft.location_place_id,
+        }
+      : null,
+  );
 
   function commit() {
     save(toLocationFields(pickRef.current, textRef.current), () =>
