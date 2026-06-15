@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   CalendarDays,
   Check,
@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PlacesAutocomplete } from "@/components/places-autocomplete";
+import { buildLocationString, toLocationFields, type PlacePick } from "@/lib/places/place-pick";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -259,11 +261,13 @@ function LocationEditor({ values }: { values: Values }) {
   const { event } = values;
   const [open, setOpen] = useState(false);
   const { save, pending } = useFieldSave(event.id);
-  const [value, setValue] = useState(event.location ?? "");
+  const textRef = useRef(event.location ?? "");
+  const pickRef = useRef<PlacePick | null>(null);
 
   function commit() {
-    const trimmed = value.trim();
-    save({ location: trimmed === "" ? null : trimmed }, () => setOpen(false));
+    // Google Calendar stores only a single location string.
+    const { location } = toLocationFields(pickRef.current, textRef.current);
+    save({ location }, () => setOpen(false));
   }
 
   return (
@@ -289,17 +293,20 @@ function LocationEditor({ values }: { values: Values }) {
           onKeyDown={(e) => e.stopPropagation()}
         >
           <Label htmlFor={`ploc-${event.id}`}>Location</Label>
-          <Input
-            id={`ploc-${event.id}`}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+          <PlacesAutocomplete
+            inputId={`ploc-${event.id}`}
+            initialText={event.location ?? ""}
+            placeholder="Search a place, or type your own"
             autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commit();
-              }
+            onTextChange={(t) => {
+              textRef.current = t;
+              pickRef.current = null;
             }}
+            onPick={(p) => {
+              pickRef.current = p;
+              textRef.current = buildLocationString(p.name, p.address);
+            }}
+            onEnter={commit}
           />
           <div className="flex justify-end pt-1">
             <Button size="sm" onClick={commit} disabled={pending}>
