@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   CalendarDays,
   Check,
@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PlacesAutocomplete } from "@/components/places-autocomplete";
+import { buildLocationString, toLocationFields, type PlacePick } from "@/lib/places/place-pick";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -256,11 +258,13 @@ function DateTimeEditor({ draft }: { draft: DraftEventRow }) {
 function LocationEditor({ draft }: { draft: DraftEventRow }) {
   const [open, setOpen] = useState(false);
   const { save, pending } = useFieldSave(draft);
-  const [value, setValue] = useState(draft.location ?? "");
+  const textRef = useRef(draft.location ?? "");
+  const pickRef = useRef<PlacePick | null>(null);
 
   function commit() {
-    const trimmed = value.trim();
-    save({ location: trimmed === "" ? null : trimmed }, () => setOpen(false));
+    save(toLocationFields(pickRef.current, textRef.current), () =>
+      setOpen(false),
+    );
   }
 
   return (
@@ -268,13 +272,32 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
       <DropdownMenuTrigger
         render={
           <button type="button" className="block w-full min-w-0 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:bg-muted/50">
-            <MetadataRow
-              Icon={MapPin}
-              label="Location"
-              value={draft.location}
-              placeholder="+ Add location"
-              required
-            />
+            {draft.location_name ? (
+              <div className="flex min-w-0 items-center gap-2 rounded-md px-2 py-1">
+                <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Location
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {draft.location_name}
+                  </span>
+                  {draft.location_address && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {draft.location_address}
+                    </span>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <MetadataRow
+                Icon={MapPin}
+                label="Location"
+                value={draft.location}
+                placeholder="+ Add location"
+                required
+              />
+            )}
           </button>
         }
       />
@@ -286,18 +309,20 @@ function LocationEditor({ draft }: { draft: DraftEventRow }) {
           onKeyDown={(e) => e.stopPropagation()}
         >
           <Label htmlFor={`loc-${draft.id}`}>Location</Label>
-          <Input
-            id={`loc-${draft.id}`}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="e.g. Bilal Masjid, Main Hall"
+          <PlacesAutocomplete
+            inputId={`loc-${draft.id}`}
+            initialText={draft.location ?? ""}
+            placeholder="Search a place, or type your own"
             autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commit();
-              }
+            onTextChange={(t) => {
+              textRef.current = t;
+              pickRef.current = null;
             }}
+            onPick={(p) => {
+              pickRef.current = p;
+              textRef.current = buildLocationString(p.name, p.address);
+            }}
+            onEnter={commit}
           />
           <div className="flex justify-end pt-1">
             <Button size="sm" onClick={commit} disabled={pending}>
