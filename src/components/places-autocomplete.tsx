@@ -61,6 +61,14 @@ export function PlacesAutocomplete({
     };
   }, []);
 
+  // Re-apply initialText when the prop changes so the component can be reused
+  // for a different event. Parent only changes initialText when the saved
+  // location actually changes (typing/picking update refs, not this prop).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: resync local text when the parent swaps in a new saved location
+    setText(initialText);
+  }, [initialText]);
+
   async function fetchSuggestions(input: string) {
     const lib = await loadPlacesLib();
     if (!lib) return; // Degraded mode: no key → plain text input, no list.
@@ -68,24 +76,31 @@ export function PlacesAutocomplete({
       sessionTokenRef.current = new lib.AutocompleteSessionToken();
     }
     const seq = ++seqRef.current;
-    const { suggestions: results } =
-      await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-        input,
-        sessionToken: sessionTokenRef.current,
-        includedRegionCodes: ["us"],
-      });
-    if (seq !== seqRef.current) return; // A newer keystroke superseded this.
-    const mapped: Suggestion[] = results
-      .map((s) => s.placePrediction)
-      .filter((p): p is google.maps.places.PlacePrediction => p != null)
-      .map((p) => ({
-        placeId: p.placeId,
-        primary: p.mainText?.text ?? p.text.text,
-        secondary: p.secondaryText?.text ?? "",
-        prediction: p,
-      }));
-    setSuggestions(mapped);
-    setActiveIndex(-1);
+    try {
+      const { suggestions: results } =
+        await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input,
+          sessionToken: sessionTokenRef.current,
+          includedRegionCodes: ["us"],
+        });
+      if (seq !== seqRef.current) return; // A newer keystroke superseded this.
+      const mapped: Suggestion[] = results
+        .map((s) => s.placePrediction)
+        .filter((p): p is google.maps.places.PlacePrediction => p != null)
+        .map((p) => ({
+          placeId: p.placeId,
+          primary: p.mainText?.text ?? p.text.text,
+          secondary: p.secondaryText?.text ?? "",
+          prediction: p,
+        }));
+      setSuggestions(mapped);
+      setActiveIndex(-1);
+    } catch {
+      // Network/quota/billing error → treat as "no results", but only if a
+      // newer request hasn't already superseded this one.
+      if (seq !== seqRef.current) return;
+      setSuggestions([]);
+    }
   }
 
   function handleChange(value: string) {
@@ -100,17 +115,30 @@ export function PlacesAutocomplete({
   }
 
   async function handleSelect(s: Suggestion) {
-    const place = s.prediction.toPlace();
-    await place.fetchFields({
-      fields: ["displayName", "formattedAddress", "location", "id"],
-    });
-    const pick: PlacePick = {
-      name: place.displayName ?? s.primary,
-      address: place.formattedAddress ?? s.secondary,
-      lat: place.location?.lat() ?? 0,
-      lng: place.location?.lng() ?? 0,
-      placeId: place.id ?? s.placeId,
-    };
+    let pick: PlacePick;
+    try {
+      const place = s.prediction.toPlace();
+      await place.fetchFields({
+        fields: ["displayName", "formattedAddress", "location", "id"],
+      });
+      pick = {
+        name: place.displayName ?? s.primary,
+        address: place.formattedAddress ?? s.secondary,
+        lat: place.location?.lat() ?? 0,
+        lng: place.location?.lng() ?? 0,
+        placeId: place.id ?? s.placeId,
+      };
+    } catch {
+      // fetchFields failed (network/quota/billing). Don't drop the user's
+      // selection — fall back to the prediction data already in hand.
+      pick = {
+        name: s.primary,
+        address: s.secondary,
+        lat: 0,
+        lng: 0,
+        placeId: s.placeId,
+      };
+    }
     // End the billing session after a selection.
     sessionTokenRef.current = null;
     setText(buildLocationString(pick.name, pick.address));
