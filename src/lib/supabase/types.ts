@@ -450,6 +450,11 @@ export type DraftEventRow = {
   ends_at: string | null;
   all_day: boolean;
   location: string | null;
+  location_name: string | null;
+  location_address: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_place_id: string | null;
   description: string;
   registration_url: string | null;
   audience: AudienceTag | null;
@@ -469,6 +474,11 @@ export type DraftEventInsert = {
   ends_at?: string | null;
   all_day?: boolean;
   location?: string | null;
+  location_name?: string | null;
+  location_address?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  location_place_id?: string | null;
   description?: string;
   registration_url?: string | null;
   audience?: AudienceTag | null;
@@ -485,6 +495,11 @@ export type DraftEventUpdate = {
   ends_at?: string | null;
   all_day?: boolean;
   location?: string | null;
+  location_name?: string | null;
+  location_address?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  location_place_id?: string | null;
   description?: string;
   registration_url?: string | null;
   audience?: AudienceTag | null;
