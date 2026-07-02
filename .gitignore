@@ -54,3 +54,5 @@ next-env.d.ts
 /audit-*.png
 /debug-*.png
 /mockup-*.png
+test-results/
+playwright-report/

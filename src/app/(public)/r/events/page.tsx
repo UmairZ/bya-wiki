@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ArrowUpRight, Calendar, Lock, MapPin } from "lucide-react";
 import { APP_NAME, LOGO_LOCKUP_SRC } from "@/lib/brand";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCalendarEvents, getIcsUrl } from "@/lib/calendar/ics";
+import { getCalendarEvents } from "@/lib/calendar/ics";
 import { parseDescription } from "@/lib/calendar/markers";
 import { cn } from "@/lib/utils";
 import { flyerPublicUrl } from "@/lib/flyer-url";
@@ -51,7 +51,17 @@ type Tile = {
 };
 
 async function loadTiles(): Promise<Tile[]> {
-  const icsUrl = await getIcsUrl();
+  // Admin client throughout — this route is intentionally public, but
+  // app_settings/event_flyers RLS only grants SELECT to authenticated users,
+  // so reading the ICS URL via the cookie-bound client returns nothing for
+  // anonymous visitors. Bypass RLS server-side.
+  const admin = createSupabaseAdminClient();
+  const { data: settings } = await admin
+    .from("app_settings")
+    .select("google_calendar_ics_url")
+    .eq("id", 1)
+    .single();
+  const icsUrl = settings?.google_calendar_ics_url?.trim();
   if (!icsUrl) return [];
 
   let events;
@@ -69,9 +79,6 @@ async function loadTiles(): Promise<Tile[]> {
   });
   if (upcoming.length === 0) return [];
 
-  // Look up flyers via admin client (bypasses RLS; safe — server-side, this
-  // route is intentionally public anyway).
-  const admin = createSupabaseAdminClient();
   const baseUids = Array.from(
     new Set(upcoming.map((e) => e.id.split("::")[0])),
   );
