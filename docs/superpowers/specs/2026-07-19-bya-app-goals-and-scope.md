@@ -581,6 +581,36 @@ fabric is the project.
 
 ---
 
+## 15. Beyond youth programming — masjid-wide notes (Horizon 2 seeds)
+
+First concrete Horizon-2 feature ideas, noted so they aren't lost. Not BYA
+scope; they're evidence for the masjid-vertical thesis (§1).
+
+### Ramadan iftar sponsorship signup (noted 2026-07-27)
+
+The masjid runs ~30 days of community-sponsored iftar. Today: people pledge
+informally, someone follows up to collect. The feature: a signup page covering
+three situations —
+
+1. **Pick day(s) + pay:** a set amount per day (historically $3,000/day, flat
+   across all 30). The page must show the per-day amount.
+2. **Pick day(s) + bring the food themselves:** sponsor caters; masjid arranges
+   plates/spoons/cups/napkins.
+3. **General donation, no specific day:** pledge any amount toward costs.
+   Nice-to-have: show how many days-of-cost the pledge covers.
+
+Decisions/notes:
+- **Pledge form, not payment.** The masjid doesn't use Zeffy yet; collection
+  stays follow-up-based. Immediate payment is a later feature (multi-org
+  scale, if needed).
+- **Variable pricing (weekday lower / weekend higher):** undecided — build as
+  an optional setting worth exploring, default flat.
+- **UX rule: multi-day selection in one flow.** Click all the days you want —
+  never one-pledge-form-per-day. The page should make taking *more* days easy,
+  because the goal is maximizing coverage.
+
+---
+
 ## Parked questions (to resolve after the braindump)
 
 1. ~~Tally vs. native forms~~ — **resolved:** native hard-coded forms primary,
