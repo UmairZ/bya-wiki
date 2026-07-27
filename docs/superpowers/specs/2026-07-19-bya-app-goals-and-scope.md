@@ -67,10 +67,26 @@ Every program falls under (generally) one of three pillars; some serve multiple:
 link" is an external Zeffy donation page rather than a registration form.
 Fundraisers are programs that *earn* rather than spend (§10).
 
-**Template granularity principle (open — owner thinking on it):** program types
-must be *specific enough that templates genuinely differ, but broad enough to be
-reused regularly* — a template that fires once a year for one hyper-specific
-event isn't a template. The eventual template list must pass this test.
+**Template granularity principle:** program types must be *specific enough that
+templates genuinely differ, but broad enough to be reused regularly* — a
+template that fires once a year for one hyper-specific event isn't a template.
+
+**Proposed template list (2026-07-26)** — derived from the FY25-26 Year-in-
+Review (57 events) and FY26-27 plan (85 planned), grouped by *operational
+shape*, each passing the granularity test:
+
+| Template | Covers | ~Uses/yr | Shape |
+|---|---|---|---|
+| **Recurring Night** | youth/junior/girls nights, YP meetups, family story nights | 40+ | ~2h; prayer/lecture/activity/food; wide-net marketing; registration optional; audience is a *field* |
+| **Camp / Overnight** | itikaafs, summer camp | ~5 | mandatory registration + liability; badges/lanyards; heavy food; full reminder cadence |
+| **Guest Speaker Visit** | Sh. Asim-style visits | ~6 | a *program spawning multiple events* + travel/lodging/honorarium logistics (heterogeneous sessions, proven in real data) |
+| **Workshop / Class** | istighfar, ghusl & kafan, life-skills, Islamic ed | ~8 | single or multi-day; **paid toggle** (Zeffy) covers Toastmasters-style classes |
+| **Service / Volunteering Day** | food-box labeling, cleanups, park maintenance | ~12 | volunteer crew + partner org + supplies |
+| **Fundraiser** | bake sales etc. | — | already locked (above) |
+
+**Deliberately NOT templates** (fail the granularity test): Eid Festival, Quran
+competitions, 30 Days 30 Deeds, SNAP-relief-style responses. These are annual
+specials — served by **duplicate** (§7.3), not templates.
 
 ## 4. Program archetypes (stakes spectrum)
 
@@ -180,6 +196,19 @@ always triggers confirmation text + email; reminder cadence varies from zero
   given run, while the playbook is the ever-evolving forward version.
 - Explicitly more than an audit log — a Google Doc could do that; the point is
   applying the past to the future.
+
+### 7.0 Duplicate (complement to templates, added 2026-07-26)
+
+Staff can go into history, **duplicate a past program/event**, and adjust it.
+This does not conflict with templates — it completes them:
+- **Templates** = shapes repeating many times a year; the living playbook is
+  canonical and improvements propagate to every future instance.
+- **Duplicate** = annual specials (Eid Festival, Quran competitions, SNAP-style
+  responses); last year's *instance* — task list, learnings and all — IS the
+  playbook. Copy, adjust, run.
+- One soft rule, no enforcement machinery: for template-covered types, reach
+  for the template (else playbook improvements stop propagating); duplicate is
+  for annual/bespoke programs.
 
 ### 7.1 Task phases: before / during / after
 
@@ -314,6 +343,20 @@ reviewable package (the batch-total-plus-receipts artifact).
 - This is also how **org donation tracking** lands: a donation is just an income
   transaction linked to the org; "has this org donated before / how much" is a
   report, not a feature.
+
+**Validated against the real FY25-26 ledger (2026-07-26)** — the current
+spreadsheet confirmed the design and added three real-world wrinkles to keep:
+- **Adjustments / cost-sharing:** partners sometimes cover part of a cost (ICCH
+  paid one hotel night; Sunday School split an honorarium; a speaker refused
+  his honorarium). A transaction needs an adjustment amount + note, so
+  sub-total ≠ what we actually owed.
+- **In-kind donation status:** a staffer sometimes eats an expense as a
+  donation ("Paid By: Umair, Status: Donation") — the cost is recorded but owed
+  = $0. Worth keeping: it captures true program cost even when the masjid paid
+  nothing.
+- **Statuses observed in the wild:** Paid · Pending · Donation · Direct
+  (masjid-paid) — matching our reimbursement/direct-expense flavors, plus the
+  donation flavor above.
 
 **Vendors (2026-07-24):** the current spreadsheet has a **vendor** column (who
 we paid — "Domino's", "Amazon", or a speaker's name) and a **description**
@@ -553,9 +596,10 @@ fabric is the project.
 12. **Planning Center evaluation (§14)** — free-tier trial with one fake youth
     night, BEFORE final architecture. Decides adopt-and-build-around vs.
     reject-with-reasons.
-4. **Template list + granularity** — which program types exist as templates
-   (specific-but-reusable test, §3). Owner is thinking on it; some Grow/Serve
-   programs work differently and will shape this.
+4. Template list — **proposed from real FY25-26/FY26-27 data (§3), awaiting
+   owner confirmation:** Recurring Night · Camp/Overnight · Guest Speaker
+   Visit · Workshop/Class · Service Day · Fundraiser; annual specials via
+   duplicate (§7.0).
 5. External section — entire scope pending.
 6. ~~Finance/accounting pin~~ — **resolved:** reimbursements (§10).
 7. ~~Speaker/guest costs~~ — **resolved:** costs live in the program ledger;
