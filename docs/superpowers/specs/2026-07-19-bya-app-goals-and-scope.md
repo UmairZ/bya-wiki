@@ -42,10 +42,13 @@
 
 ## 2. Two sections
 
-| Section | What | Weight |
-|---|---|---|
-| **Internal** | The web app organizers/staff work in. Several big modules that must integrate tightly. | The bulk of the project. |
-| **External** | A proper public youth website (§13). | |
+| Section | What | Scope | Weight |
+|---|---|---|---|
+| **Internal** | The web app organizers/staff work in. Several big modules that must integrate tightly. | **Masjid-wide** — built to absorb future modules (rooms, zakat, …) | The bulk of the project. |
+| **External** | A proper public website (§13). | **Youth only** (Bilal Youth Affairs) | |
+
+The two are deliberately scoped differently — architectural reason inside,
+organizational reason outside. See §13 "Scope asymmetry."
 
 ## 3. Programming — the three pillars
 
@@ -181,21 +184,60 @@ always triggers confirmation text + email; reminder cadence varies from zero
   schedule covering all channels — when emails go out, when texts go out, when
   social posts go up, when stories go up.
 
-## 7. Tasks & playbooks
+## 7. Templates (= playbooks) — tasks & the applied shape
 
-- Recurring event types share a playbook: publish flyer, decide date, decide
-  speaker/lecture-giver, decide activity owner, who picks up pizza, room setup,
-  snacks, reminders — "always the same things to decide."
-- **Apply a playbook to a program → task list auto-populates.** Tasks get
-  assignees.
-- **Playbooks are living, not static:** learnings from a run (always bring the
-  soccer ball; arrive early to move the mic over) get added, so the playbook
-  evolves forward. No changelog needed on the playbook itself.
-- **Dual purpose — template + audit log:** each past program keeps its own
+> **Terminology fix (2026-08-11):** this section originally said "playbook" and
+> §3 said "template" for the same concept — drift from §7 being captured before
+> §3 existed. **They are one thing.** "Template" is the word; "playbook" is
+> retained only as a descriptive synonym for its task-list content.
+
+**What a template is (owner, 2026-08-11):** click **+** → a new program page
+opens with every field empty → **apply a template** → it fills in the fields,
+builds the task list, builds the run-of-show schedule, and sets the comms
+cadence. One action, whole shape.
+
+The real distinction is **master vs instance**, not template vs playbook:
+
+- **Template (master)** — the living version. Recurring event types share the
+  same set of decisions: publish flyer, decide date, decide speaker/lecture-
+  giver, decide activity owner, who picks up pizza, room setup, snacks,
+  reminders — "always the same things to decide." Edit the master and every
+  *future* program created from it inherits the improvement.
+- **Instance** — the copy applied to one actual program. Tasks get assignees,
+  get ticked, get one-off additions; the instance freezes as that event's
+  record. Editing an instance does **not** touch the master.
+
+Consequences:
+- **Templates are living, not static:** learnings from a run (always bring the
+  soccer ball; arrive early to move the mic over) get added to the master, so
+  it evolves forward. No changelog needed on the template itself.
+- **Dual purpose — forward shape + audit log:** each past program keeps its own
   instantiated task list, so you can look back at exactly what was done for any
-  given run, while the playbook is the ever-evolving forward version.
+  given run, while the master is the ever-evolving forward version.
 - Explicitly more than an audit log — a Google Doc could do that; the point is
   applying the past to the future.
+- **Resolved (2026-08-11): edit the master directly.** No "promote to template"
+  from an instance — the owner's reason: promotion would blur the instance,
+  making it unclear whether you're editing this event or every future one. The
+  instance stays purely the record of one run; improving the shape is a
+  deliberate trip to the template.
+
+### 7.0a Templates are owner-authored, not shipped (2026-08-11)
+
+The owner will **write the templates themselves once the app is running** —
+they are data, not code. The app ships **template CRUD** (create/edit/delete a
+template: its fields, task list, run-of-show, comms cadence); it does not ship
+six hard-coded shapes derived from this doc.
+
+- Consequence: the §3 template list is **directional evidence** that the
+  feature is worth building and roughly what shapes exist — *not* a build
+  spec. Per-template field detail is deliberately not captured here.
+- Consistent with §1's "no builders" horizon-1 line, which scopes to *form* and
+  *email* builders. A program-template editor is the opposite call and is made
+  knowingly: the owner authoring their own templates is cheaper to build and
+  truer to "codify tribal knowledge" (§1) than us transcribing it.
+- It also front-loads the Horizon-3 property: other masjids author their own
+  templates rather than inheriting BYA's.
 
 ### 7.0 Duplicate (complement to templates, added 2026-07-26)
 
@@ -531,7 +573,36 @@ burden:
   listserv/subscription groups (feeds the §9 People module; Twilio/Resend on
   the send side).
 
-*(External section continues — owner has more to add.)*
+### Scope asymmetry: masjid-wide inside, youth-only outside (2026-08-11)
+
+Deliberate and owner-endorsed — **internal and external are scoped differently
+on purpose**:
+
+| | Scope | Why |
+|---|---|---|
+| **Internal app** | Masjid-wide from the ground up | *Architectural.* Built so modules (room management, zakat, etc.) can be added whenever, without rework. Focusing on program management now doesn't foreclose them. |
+| **External site** | Youth only — Bilal Youth Affairs | *Organizational.* The owner runs the youth department, not the masjid. Publishing a masjid-wide public face isn't their call to make today. |
+
+Owner: *"I understand that's an inconsistency, but I'm okay with it for now.
+When/If I do enter a position of authority at the masjid, then I'll update the
+website to be reflective of the entire organization. However, it's not my place
+to do that right now."*
+
+It reads as an inconsistency but isn't one — the two constraints are different
+kinds. Modularity is expensive to retrofit, so it's bought up front. Public
+brand scope costs nothing to change later and isn't the owner's authority now,
+so it's deferred.
+
+**What this buys in the build (naming discipline, not extra code):** don't bake
+"BYA" into the internal app's identity — models, schema, and shared components
+belong to *the masjid's system, with a youth department in it*, not to "the BYA
+app with masjid parts bolted on." The public site is **a** department face, not
+**the** public face. Done this way, a future masjid-wide site is an addition;
+done the other way, it's a rewrite. No multi-brand theming or configurability
+is being built now — just don't hard-code the department as the whole.
+
+*(§13 is complete as of 2026-08-11 — owner: "this mostly covers what I want
+from the website." Reopen if more comes up.)*
 
 ---
 
@@ -546,15 +617,38 @@ Google Drive (working files) · Canva + Claude (design) · Google Calendar
 (calendar plumbing). The app keeps orchestration; services keep the
 commodities.
 
-**The evaluation gate: Planning Center (ChMS).** The closest existing product
-to this doc — People (households/parents), Registrations (forms + waivers),
-Services (a mature minute-by-minute run-of-show with assigned positions ≈
-§7.2), Check-Ins (minor attendance), Calendar, Giving. Owner's first read of
-the site: "exactly what I want, values line up." **Before final architecture:
-sign up for the free tier, run one fake youth night through it end-to-end, and
-record where the church shape helps vs. grates.** Outcome is either (a) adopt
-modules and build around them, or (b) consciously reject with reasons written
-down.
+**The evaluation gate: Planning Center (ChMS) — CLEARED 2026-08-11.** The
+closest existing product to this doc — People (households/parents),
+Registrations (forms + waivers), Services (a mature minute-by-minute run-of-
+show with assigned positions ≈ §7.2), Check-Ins (minor attendance), Calendar,
+Giving. Owner's first read of the site was "exactly what I want, values line
+up"; the gate was to actually try it before final architecture.
+
+**Verdict (owner, after checking it out): build. "Okay — definitely not as
+comprehensive as what I'm planning here with the future of this app."** This is
+outcome (b): a conscious reject, reasons recorded.
+
+- **What PC has that we don't:** room scheduling, donations, and similar
+  masjid-wide operational modules.
+- **Why that doesn't change the call:** those are *modules we haven't built
+  yet*, not gaps in the plan. They get picked up when their turn comes (see the
+  module-sequencing note below). A product being ahead on modules we've
+  deliberately not started is not evidence it fits.
+- The §14 principle still stands elsewhere — Zeffy, Tally, Twilio, Resend,
+  Drive, Canva, Google Calendar all remain bought, not built.
+
+**Framing correction (owner, 2026-08-11): sequencing is by module, not by
+ambition.** The earlier horizons language (§1) reads as though the app starts
+as a department tool and *later grows into* masjid management. That is not the
+plan. **This is already a full masjid-management application** — the ambition
+was never department-scoped. What is scoped is *which module ships first*:
+program management (plus the modules listed in this doc). Rooms, donations, and
+the rest are later modules of the same system, not a later, bigger system.
+
+The practical consequence is unchanged — build program management first, prove
+it with real BYA use — so no §1 decision is reversed. What changes is the
+reason: it is first *because it's the module BYA needs most*, not because the
+app's ambition is small at the start.
 
 **The church-vs-mosque observation (owner):** PC wins *because* it's built
 specifically for churches — vertical quality-of-life details. Those same
@@ -623,14 +717,22 @@ Decisions/notes:
    Also open: run-of-show as explicit "event mode" vs. always-there view (§7.2).
 11. Kid-account model: parent accounts with kid profiles vs. kid accounts with
     captured parental consent (§12).
-12. **Planning Center evaluation (§14)** — free-tier trial with one fake youth
-    night, BEFORE final architecture. Decides adopt-and-build-around vs.
-    reject-with-reasons.
-4. Template list — **proposed from real FY25-26/FY26-27 data (§3), awaiting
-   owner confirmation:** Recurring Night · Camp/Overnight · Guest Speaker
-   Visit · Workshop/Class · Service Day · Fundraiser; annual specials via
-   duplicate (§7.0).
-5. External section — entire scope pending.
+12. ~~Planning Center evaluation (§14)~~ — **resolved 2026-08-11: reject, build
+    our own.** Owner checked it out; not as comprehensive as the plan. Rooms/
+    donations gaps are unbuilt modules of ours, not a reason to adopt. §14 has
+    the reasons. Architecture is unblocked.
+4. ~~Template list~~ — **closed 2026-08-11, not by deciding the list but by
+   moving it out of scope:** templates are owner-authored in-app (§7.0a). The
+   §3 list stays as directional evidence; the build target is template CRUD.
+   Owner's own partial list, for the record: Youth Nights (recurring, boys &
+   girls separate) · Jr Youth Nights (recurring, boys & girls separate) · Kids
+   Story Nights (recurring) · Camps (likely absorbs itikaafs) — explicitly "not
+   the most exhaustive list."
+5. ~~External section~~ — **closed 2026-08-11:** §13 captured in full (identity,
+   transparency motive, leadership, roles, audiences, events surface, locked
+   feature set, scope asymmetry). Owner: "this mostly covers what I want."
+   Remaining external work is *site structure* (pages/nav/landing), which is
+   design, not scope.
 6. ~~Finance/accounting pin~~ — **resolved:** reimbursements (§10).
 7. ~~Speaker/guest costs~~ — **resolved:** costs live in the program ledger;
    the People↔Programs role linkage provides the click-through (§9).
