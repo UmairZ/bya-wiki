@@ -2,7 +2,7 @@
 
 A program management app I built for Bilal Youth Affairs, the youth department of a masjid. It replaces a scatter of spreadsheets, group chats, and tribal knowledge with one place to plan events, keep documentation, and track the work around them.
 
-The design premise is to build for one real department first rather than for a hypothetical market. Every feature earns its place through actual BYA use, and choices that only make sense at single-department scale are made deliberately and left for later rather than generalized early.
+I built this partly as a test: I wanted to see how a program management app might actually feel to use, using a department I know well as the case. Rather than designing for a hypothetical market, I built for one real department first, let every feature earn its place through actual BYA use, and made the choices that only make sense at single-department scale deliberately, leaving them to revisit later rather than generalizing early.
 
 ## What it does
 
