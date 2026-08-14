@@ -56,3 +56,11 @@ next-env.d.ts
 /mockup-*.png
 test-results/
 playwright-report/
+
+# AI tooling and internal working documents
+CLAUDE.md
+AGENTS.md
+.claude/
+docs/superpowers/
+claude-code-kickoff-*.md
+*.xlsx
